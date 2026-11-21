@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel de resultados · Test de rotación mental</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3 28 9v14l-12 6-12-6V9z' fill='%231d9c8d'/%3E%3Cpath d='M16 3 28 9l-12 6L4 9z' fill='%23a8e6dc'/%3E%3Cpath d='M16 15v14l12-6V9z' fill='%230c544d'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/estilo.css">
+  <style>
+    .viz-root {
+      color-scheme: light;
+      --surface-1: #ffffff;
+      --text-primary: #0b0b0b;
+      --text-secondary: #52514e;
+      --text-muted: #898781;
+      --grid: #e1e0d9;
+      --axis: #c3c2b7;
+    }
+    .zona-carga { border: 2px dashed var(--borde); border-radius: 12px; padding: 22px; text-align: center; color: var(--suave); background: #fafcfb; cursor: pointer; }
+    .zona-carga.encima { border-color: var(--acento); background: #eef7f6; }
+    .archivos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .filtros { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
+    .filtros label { flex-direction: row; align-items: center; gap: 8px; font-weight: 500; }
+    .filtros input[type=number] { width: 70px; padding: 5px 8px; }
+    .filtros select { padding: 5px 8px; }
+    .baldosas { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 4px 0 4px; }
+    .baldosa { background: #fafcfb; border: 1px solid var(--borde); border-radius: 12px; padding: 12px 14px; }
+    .baldosa .v { font-size: 1.7rem; font-weight: 650; }
+    .baldosa .t { font-size: .82rem; color: var(--suave); }
+    .rejilla-graficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 18px; }
+    .grafico { background: var(--surface-1); border: 1px solid var(--borde); border-radius: 12px; padding: 14px 16px 8px; }
+    .grafico h3 { font-size: 1rem; margin: 0; }
+    .grafico .sub { font-size: .82rem; color: var(--text-secondary); margin: 2px 0 8px; }
+    .grafico svg { width: 100%; height: auto; display: block; overflow: visible; }
+    .grafico svg text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; }
+    .leyenda-viz { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .82rem; color: var(--text-secondary); margin: 4px 0 2px; }
+    .leyenda-viz span { display: inline-flex; align-items: center; gap: 6px; }
+    .leyenda-viz i { display: inline-block; width: 18px; height: 2px; position: relative; }
+    .leyenda-viz i::after { content: ""; position: absolute; left: 5px; top: -4px; width: 8px; height: 8px; border-radius: 50%; background: inherit; }
+    .vacio { color: var(--suave); font-size: .9rem; padding: 18px 0; }
+    .aviso-sim { background: #fde7d9; border: 1px solid #f5c3a3; color: #9a3412; border-radius: 10px; padding: 10px 14px; font-weight: 600; }
+    details.tabla-datos summary { cursor: pointer; font-size: .82rem; color: var(--suave); margin: 4px 0; }
+    .excluido td { color: #9ca3af; }
+    @media (max-width: 520px) { .rejilla-graficos { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<section class="pantalla activa viz-root">
+  <header class="cabecera-app">
+    <div>
+      <p class="etiqueta">Neurociencia Cognitiva e IA · UFV</p>
+      <h1>Panel de resultados</h1>
+      <p class="nota" style="margin:0">Junta los CSV del laboratorio, de la versión online y de la IA. Todo se procesa en este navegador: no se sube nada.</p>
+    </div>
+    <nav class="enlaces-app"><a class="btn sec" href="index.html">← Laboratorio</a></nav>
+  </header>
+
+  <div class="tarjeta ancha">
+    <h2 style="margin-top:0">Datos</h2>
+    <label class="zona-carga" id="zona-carga">
+      <input type="file" id="entrada-archivos" accept=".csv,text/csv" multiple hidden>
+      <b>Arrastra aquí los CSV</b> o pulsa para elegirlos<br>
+      <span class="nota">Laboratorio (sesiones o «todas las sesiones»), online (hoja «ensayos» descargada en CSV), red siamesa (<code>ia9_3d.csv</code>, <code>ia9mix_2d.csv</code>…) y test por chat (<code>resultados_chat.csv</code>).</span>
+    </label>
+    <div class="fila-botones">
+      <button type="button" class="btn sec" id="btn-navegador">Añadir los datos guardados en este navegador</button>
+      <button type="button" class="btn sec" id="btn-simulados">Añadir datos simulados (para ver el panel)</button>
+      <button type="button" class="btn sec peligro" id="btn-vaciar">Vaciar</button>
+    </div>
+    <div class="archivos" id="archivos"></div>
+    <p class="aviso-sim" id="aviso-sim" hidden>Hay DATOS SIMULADOS cargados: sirven solo para ver cómo funciona el panel. No son datos reales.</p>
+  </div>
+
+  <div class="tarjeta ancha" id="resultados" hidden>
+    <div class="filtros">
+      <label><input type="checkbox" id="f-prueba" checked> Excluir datos de prueba</label>
+      <label>Modalidad
+        <select id="f-modalidad"><option value="">Todas</option><option value="laboratorio">Laboratorio</option><option value="online">Online</option></select>
+      </label>
+      <label><input type="checkbox" id="f-precision" checked> Excluir a quien acierte menos del <input type="number" id="f-umbral" value="60" min="0" max="100" step="5"> % en el test normal</label>
+      <label><input type="checkbox" id="f-tr" checked> TR válidos entre 300 ms y 20 s</label>
+      <label><input type="checkbox" id="f-primero"> Test normal y 2D: solo de quien lo hizo en primer lugar (sin práctica previa, como la IA)</label>
+    </div>
+    <div class="baldosas" id="baldosas" style="margin-top:16px"></div>
+
+    <h2>Estudio 1 · test normal (personas)</h2>
+    <div class="rejilla-graficos">
+      <div class="grafico" id="g-precision"></div>
+      <div class="grafico" id="g-tr"></div>
+    </div>
+
+    <h2>Control 2D · figuras planas frente a cubos (mismas personas)</h2>
+    <div class="rejilla-graficos">
+      <div class="grafico" id="g-dim-precision"></div>
+      <div class="grafico" id="g-dim-tr"></div>
+    </div>
+    <div class="tabla-scroll"><table class="tabla" id="t-dimension"></table></div>
+    <p class="nota">Las mismas personas con las figuras de cubos (test normal) y con las planas (control 2D): diferencias apareadas por participante (media ± error estándar) y t de Student para muestras relacionadas, para todos y según cuál de los dos tests hizo antes. Si la pendiente es mayor en 3D, girar figuras de cubos cuesta más por cada grado.</p>
+
+    <h2>Personas frente a IA</h2>
+    <div class="rejilla-graficos">
+      <div class="grafico" id="g-ia3d"></div>
+      <div class="grafico" id="g-ia2d"></div>
+    </div>
+
+    <h2>Estudio 2 · efecto de la distracción (mismas personas)</h2>
+    <div class="tabla-scroll"><table class="tabla" id="t-estudio2"></table></div>
+    <p class="nota">Diferencias apareadas por participante (media ± error estándar), con la t de Student para muestras relacionadas: el test con distracción (pitidos y formas de colores en todos los pares) frente al test normal de la misma persona. Se muestra para todos y, por separado, según cuál de los dos tests hizo antes: como el orden está contrabalanceado, la práctica se reparte por igual. La Δ pendiente indica si la distracción hace más lento el giro (más ms por grado) o solo añade un tiempo fijo.</p>
+
+    <h2>Efecto del orden (práctica)</h2>
+    <div class="tabla-scroll"><table class="tabla" id="t-orden"></table></div>
+    <p class="nota">Cada test, según la posición en que se hizo (media ± EE de los participantes). Las dos últimas columnas comparan hacerlo en primer lugar con hacerlo después de otro test (t de Welch, entre personas distintas). Una mejora al hacerlo después indica efecto de la práctica.</p>
+
+    <h2>Participantes</h2>
+    <details>
+      <summary class="nota" style="cursor:pointer" id="resumen-participantes">Ver la tabla de participantes</summary>
+      <div class="tabla-scroll"><table class="tabla" id="t-participantes"></table></div>
+    </details>
+  </div>
+</section>
+
+<script src="js/config.js"></script>
+<script src="js/resultados.js"></script>
+<script src="js/sesiones.js"></script>
+<script src="js/panel.js"></script>
+</body>
+</html>

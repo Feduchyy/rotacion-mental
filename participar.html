@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Test de rotación mental · Neurociencia Cognitiva e IA (UFV)</title>
+  <meta name="description" content="¿Son la misma figura girada o su imagen en espejo? Experimento de clase que compara a personas con inteligencias artificiales. Unos 11 minutos y anónimo.">
+  <!-- Vista previa al compartir el enlace por WhatsApp -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="¿Cuánto tarda tu cerebro en girar una figura?">
+  <meta property="og:description" content="Test de rotación mental · experimento de clase (Neurociencia Cognitiva e IA, UFV). Unos 11 minutos y anónimo.">
+  <!-- Dirección completa de la imagen (WhatsApp no acepta rutas relativas) -->
+  <meta property="og:image" content="https://feduchyy.github.io/rotacion-mental/vista_previa.png">
+  <meta property="og:url" content="https://feduchyy.github.io/rotacion-mental/participar.html">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3 28 9v14l-12 6-12-6V9z' fill='%231d9c8d'/%3E%3Cpath d='M16 3 28 9l-12 6L4 9z' fill='%23a8e6dc'/%3E%3Cpath d='M16 15v14l12-6V9z' fill='%230c544d'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+<div class="cinta-prueba" id="cinta-prueba" hidden>MODO PRUEBA</div>
+
+<!-- ============ 1. BIENVENIDA ============ -->
+<section id="p-bienvenida" class="pantalla activa">
+  <div class="tarjeta hero">
+    <p class="etiqueta">Neurociencia Cognitiva e IA · UFV</p>
+    <h1>¿Cuánto tarda tu cerebro en girar una figura?</h1>
+    <div class="figura-portada"><canvas id="portada-1"></canvas><canvas id="portada-2"></canvas></div>
+    <p class="intro">Verás parejas de figuras como esta y tendrás que decidir si son <b>la misma figura girada</b> o <b>su imagen en espejo</b>. Es un experimento de clase que compara a personas con inteligencias artificiales.</p>
+    <div class="requisitos">
+      <div class="requisito"><span class="i">⏱️</span><b id="b-minutos">11 minutos</b><br>más o menos</div>
+      <div class="requisito"><span class="i">💻</span><b>Ordenador</b><br>o móvil en horizontal</div>
+      <div class="requisito" id="req-sonido"><span class="i">🔊</span><b>Con sonido</b><br>en una de las partes</div>
+      <div class="requisito"><span class="i">🤫</span><b>Sitio tranquilo</b><br>sin interrupciones</div>
+    </div>
+    <p class="aviso" id="b-aviso" hidden></p>
+    <div class="fila-botones centro"><button type="button" class="btn principal grande" id="btn-bienvenida">Empezar</button></div>
+    <p class="nota">Es anónimo: no te pediremos el nombre, el correo ni el teléfono.</p>
+  </div>
+</section>
+
+<!-- ============ 2. INFORMACIÓN Y CONSENTIMIENTO ============ -->
+<section id="p-consentimiento" class="pantalla">
+  <div class="tarjeta">
+    <p class="etiqueta">Paso 1 de 2</p>
+    <h1>Antes de empezar</h1>
+    <div class="info-legal" id="info-legal"></div>
+    <form id="form-consentimiento">
+      <label class="check"><input type="checkbox" id="c-edad" required><span>Tengo <b id="c-edad-min">18</b> años o más.</span></label>
+      <label class="check"><input type="checkbox" id="c-acepto" required><span>He leído la información y acepto participar.</span></label>
+      <div class="fila-botones"><button class="btn principal" type="submit">Acepto y continúo</button></div>
+    </form>
+  </div>
+</section>
+
+<!-- ============ 3. DATOS GENERALES ============ -->
+<section id="p-datos" class="pantalla">
+  <div class="tarjeta">
+    <p class="etiqueta">Paso 2 de 2</p>
+    <h1>Unos datos generales</h1>
+    <p class="nota">Nos sirven para describir a quién ha participado. Solo la edad es obligatoria.</p>
+    <form id="form-datos" autocomplete="off">
+      <div class="rejilla">
+        <label>Edad *
+          <input id="f-edad" type="number" min="18" max="99" required inputmode="numeric">
+        </label>
+        <label>Género
+          <select id="f-genero">
+            <option value="">Prefiero no decirlo</option>
+            <option>Mujer</option><option>Hombre</option><option>Otro</option>
+          </select>
+        </label>
+        <label>Mano dominante
+          <select id="f-mano">
+            <option value="">—</option><option>Diestra</option><option>Zurda</option><option>Ambidiestra</option>
+          </select>
+        </label>
+        <label>Estudios
+          <select id="f-estudios">
+            <option value="">—</option>
+            <option value="STEM">Ciencias, ingeniería o tecnología (STEM)</option>
+            <option value="No STEM">Otras áreas (no STEM)</option>
+            <option value="Otro">Otro / no estudio</option>
+          </select>
+        </label>
+        <label>Visión
+          <select id="f-vision">
+            <option value="">—</option><option>Normal</option><option>Corregida (gafas o lentillas)</option>
+          </select>
+        </label>
+        <label>¿Juegas a videojuegos en 3D?
+          <select id="f-exp3d">
+            <option value="">—</option>
+            <option value="0">Nunca</option>
+            <option value="1">Rara vez</option>
+            <option value="2">Algunas veces al mes</option>
+            <option value="3">Varias veces por semana</option>
+            <option value="4">A diario</option>
+          </select>
+        </label>
+        <label class="ancho">¿Has hecho antes un test de rotación mental?
+          <select id="f-previo">
+            <option value="">—</option><option>No</option><option>Sí</option>
+          </select>
+        </label>
+      </div>
+      <div class="fila-botones"><button class="btn principal" type="submit">Continuar</button></div>
+    </form>
+  </div>
+</section>
+
+<!-- ============ 4. FIN ============ -->
+<section id="p-gracias" class="pantalla">
+  <div class="tarjeta">
+    <p class="etiqueta">¡Terminado!</p>
+    <h1>¡Muchas gracias por participar!</h1>
+    <div class="estado-envio" id="envio-estado"></div>
+    <div id="g-resultados">
+      <h2>Tus resultados</h2>
+      <div class="cifras" id="g-cifras"></div>
+      <div class="leyenda"><span class="punto igual"></span> Pares iguales <span class="punto espejo"></span> Pares espejo <span class="linea"></span> Tendencia (iguales)</div>
+      <canvas id="g-grafica" class="grafica"></canvas>
+      <p id="g-explicacion"></p>
+    </div>
+    <div class="compartir" id="g-compartir">
+      <h2>¿Nos ayudas a llegar a más gente?</h2>
+      <p class="nota">Cuantas más personas participen, mejor saldrá el trabajo. ¡Gracias!</p>
+      <a class="btn whatsapp grande" id="btn-compartir" target="_blank" rel="noopener">Compartir por WhatsApp</a>
+    </div>
+    <p class="nota">Tu código anónimo es <span class="codigo" id="g-codigo"></span>. <span id="g-contacto"></span></p>
+  </div>
+</section>
+
+<script src="js/config.js"></script>
+<script src="js/figuras.js"></script>
+<script src="js/ensayos.js"></script>
+<script src="js/distractores.js"></script>
+<script src="js/resultados.js"></script>
+<script src="js/sesiones.js"></script>
+<script src="js/motor.js"></script>
+<script src="js/envio.js"></script>
+<script src="js/online.js"></script>
+</body>
+</html>

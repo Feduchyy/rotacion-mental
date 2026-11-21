@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Test de rotación mental · Laboratorio</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3 28 9v14l-12 6-12-6V9z' fill='%231d9c8d'/%3E%3Cpath d='M16 3 28 9l-12 6L4 9z' fill='%23a8e6dc'/%3E%3Cpath d='M16 15v14l12-6V9z' fill='%230c544d'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+
+<!-- ============ PANEL DEL EXPERIMENTADOR ============ -->
+<section id="p-panel" class="pantalla activa">
+  <header class="cabecera-app">
+    <div>
+      <p class="etiqueta">Neurociencia Cognitiva e IA · UFV</p>
+      <h1>Test de rotación mental</h1>
+      <p class="nota" style="margin:0">Panel del experimentador · sesiones presenciales</p>
+    </div>
+    <nav class="enlaces-app">
+      <a class="btn sec" href="participar.html?prueba=1" target="_blank" rel="noopener">Versión online ↗</a>
+      <a class="btn sec" href="panel.html">Panel de resultados</a>
+      <a class="btn sec" href="estimulos.html">Estímulos para IA</a>
+    </nav>
+  </header>
+
+  <div class="tarjeta ancha">
+    <h2 style="margin-top:0">Nueva sesión</h2>
+    <form id="form-sesion" autocomplete="off" novalidate>
+      <div class="opciones-sesion">
+        <label>Código del participante
+          <input id="s-codigo" required maxlength="20" placeholder="P01">
+          <span class="nota" id="s-codigo-nota"></span>
+        </label>
+        <label>Orden de los tests (contrabalanceo)
+          <select id="s-orden"></select>
+          <span class="nota" id="s-orden-nota"></span>
+        </label>
+        <div>
+          <label style="margin-bottom:6px">Tests de la sesión</label>
+          <div class="partes">
+            <label class="check-linea"><input type="checkbox" id="s-e1" checked> Test normal · Estudio 1 (48 pares)</label>
+            <label class="check-linea"><input type="checkbox" id="s-e2" checked> Test con distracción · Estudio 2 (32 pares)</label>
+            <label class="check-linea"><input type="checkbox" id="s-2d" checked> Control 2D · figuras planas (48 pares)</label>
+          </div>
+        </div>
+        <div>
+          <label style="margin-bottom:6px">Modo</label>
+          <div class="partes">
+            <label class="check-linea"><input type="checkbox" id="s-demo"> Demostración: 8 pares por bloque (los datos se marcan como prueba)</label>
+          </div>
+        </div>
+      </div>
+      <div class="plan-bloques" id="s-plan"></div>
+      <p class="resumen-plan" id="s-resumen"></p>
+      <p class="error" id="s-error"></p>
+      <div class="fila-botones"><button class="btn principal grande" type="submit">Empezar sesión →</button></div>
+    </form>
+
+    <details id="ajustes" class="ajustes">
+      <summary>Un solo bloque o parámetros personalizados (avanzado)</summary>
+      <label>Condición
+        <select id="sel-condicion"></select>
+      </label>
+      <p class="nota" id="resumen-condicion"></p>
+      <details>
+        <summary>Parámetros avanzados (JSON)</summary>
+        <p class="nota">Puedes cambiar cualquier valor. Se aplica solo a este bloque y se guarda como <code>&lt;condición&gt;_personalizada</code>. Para cambios permanentes edita <code>js/config.js</code>.</p>
+        <textarea id="json-config" spellcheck="false"></textarea>
+        <p class="error" id="error-json"></p>
+      </details>
+      <div class="fila-botones"><button type="button" class="btn" id="btn-bloque">Empezar solo este bloque →</button></div>
+    </details>
+  </div>
+
+  <div class="tarjeta ancha">
+    <h2 style="margin-top:0">Datos guardados en este navegador</h2>
+    <p class="nota" id="info-almacen"></p>
+    <p class="aviso" id="aviso-almacen" hidden></p>
+    <div class="tabla-scroll"><table class="tabla" id="tabla-sesiones"></table></div>
+    <div class="fila-botones">
+      <button type="button" class="btn sec" id="btn-descargar-todo">Descargar todo (CSV)</button>
+      <button type="button" class="btn sec" id="btn-descargar-json">Descargar todo (JSON)</button>
+      <button type="button" class="btn sec peligro" id="btn-borrar-todo">Borrar todos los datos</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DATOS DEL PARTICIPANTE ============ -->
+<section id="p-datos" class="pantalla">
+  <div class="tarjeta">
+    <p class="etiqueta" id="d-etiqueta"></p>
+    <h1>Antes de empezar</h1>
+    <p class="intro">Verás parejas de figuras. Tendrás que decidir si son <b>la misma figura girada</b> o si una es <b>la imagen en espejo</b> de la otra.</p>
+    <form id="form-participante" autocomplete="off">
+      <h2>Algunos datos (opcionales)</h2>
+      <div class="rejilla">
+        <label>Edad
+          <input id="f-edad" type="number" min="10" max="99" inputmode="numeric">
+        </label>
+        <label>Género
+          <select id="f-genero">
+            <option value="">Prefiero no decirlo</option>
+            <option>Mujer</option><option>Hombre</option><option>Otro</option>
+          </select>
+        </label>
+        <label>Mano dominante
+          <select id="f-mano">
+            <option value="">—</option><option>Diestra</option><option>Zurda</option><option>Ambidiestra</option>
+          </select>
+        </label>
+        <label>Estudios
+          <select id="f-estudios">
+            <option value="">—</option>
+            <option value="STEM">Ciencias, ingeniería o tecnología (STEM)</option>
+            <option value="No STEM">Otras áreas (no STEM)</option>
+            <option value="Otro">Otro / no estudio</option>
+          </select>
+        </label>
+        <label>Visión
+          <select id="f-vision">
+            <option value="">—</option><option>Normal</option><option>Corregida (gafas o lentillas)</option>
+          </select>
+        </label>
+        <label>Experiencia con videojuegos 3D
+          <select id="f-exp3d">
+            <option value="">—</option>
+            <option value="0">0 · Nunca</option>
+            <option value="1">1 · Rara vez</option>
+            <option value="2">2 · Algunas veces al mes</option>
+            <option value="3">3 · Varias veces por semana</option>
+            <option value="4">4 · A diario</option>
+          </select>
+        </label>
+        <label class="ancho">¿Has hecho antes un test de rotación mental?
+          <select id="f-previo">
+            <option value="">—</option><option>No</option><option>Sí</option>
+          </select>
+        </label>
+      </div>
+      <p class="aviso" id="d-aviso-visual" hidden>⚠ En una parte aparecen y desaparecen <b>formas de colores</b> sin parar. Si tienes epilepsia fotosensible, no hagas esa parte y avisa a la persona que te pasa el test.</p>
+      <label class="check">
+        <input type="checkbox" id="f-consentimiento" required>
+        <span>Participo de forma voluntaria y puedo dejarlo cuando quiera. Entiendo que los datos se guardan de forma anónima (solo con el código) y se usan únicamente para este trabajo académico.</span>
+      </label>
+      <div class="fila-botones">
+        <button class="btn principal" type="submit">Continuar</button>
+        <button type="button" class="btn sec" id="btn-volver-panel">← Volver al panel</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ============ RESULTADOS DE LA SESIÓN ============ -->
+<section id="p-resultados" class="pantalla">
+  <div class="tarjeta">
+    <p class="etiqueta" id="res-etiqueta">Sesión terminada</p>
+    <h1>¡Gracias por participar!</h1>
+    <div id="res-detalle">
+      <div class="cifras" id="res-cifras"></div>
+      <h2 id="res-titulo-grafica">Tiempo de respuesta (mediana de aciertos) según el ángulo</h2>
+      <div class="leyenda"><span class="punto igual"></span> Pares iguales <span class="punto espejo"></span> Pares espejo <span class="linea"></span> Recta ajustada (iguales)</div>
+      <canvas id="grafica" class="grafica"></canvas>
+      <p class="nota" id="res-pendiente"></p>
+      <h2>Resumen por tests (en el orden en que se hicieron)</h2>
+      <div class="tabla-scroll"><table class="tabla" id="res-bloques"></table></div>
+      <p class="nota">Precisión = aciertos / pares respondidos. TR = mediana de los aciertos. «Frente al test normal» = diferencia con el test normal de la misma persona, en puntos porcentuales (pp) de precisión y en ms de TR.</p>
+      <details>
+        <summary class="nota" style="cursor:pointer">Detalle por ángulo y tipo (test normal)</summary>
+        <div class="tabla-scroll"><table class="tabla" id="res-tabla"></table></div>
+      </details>
+    </div>
+    <div class="fila-botones">
+      <button type="button" class="btn principal" id="btn-csv">Descargar CSV de la sesión</button>
+      <button type="button" class="btn sec" id="btn-json">Descargar JSON (todo)</button>
+      <button type="button" class="btn sec" id="btn-panel">Volver al panel</button>
+    </div>
+    <p class="nota" id="res-guardado"></p>
+  </div>
+</section>
+
+<script src="js/config.js"></script>
+<script src="js/figuras.js"></script>
+<script src="js/ensayos.js"></script>
+<script src="js/distractores.js"></script>
+<script src="js/resultados.js"></script>
+<script src="js/sesiones.js"></script>
+<script src="js/motor.js"></script>
+<script src="js/laboratorio.js"></script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Estímulos para IA</title>
+  <link rel="stylesheet" href="css/estilo.css">
+  <style>
+    .tarjeta { max-width: 1080px; }
+    .opciones { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px 16px; margin: 12px 0; }
+    .opciones .check { margin: 0; align-items: center; }
+    .galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin-top: 14px; }
+    .item { border: 1px solid var(--borde); border-radius: 10px; padding: 6px; background: #fafcfb; font-size: .78rem; color: var(--suave); }
+    .item canvas { width: 100%; height: auto; display: block; border-radius: 6px; background: #fff; }
+    .item .etq { display: flex; justify-content: space-between; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .item .clave { font-weight: 700; }
+    .clave.igual { color: var(--acento); } .clave.espejo { color: var(--espejo); }
+    .oculta-clave .clave { visibility: hidden; }
+    .progreso-export { height: 8px; background: #eef2f1; border-radius: 4px; overflow: hidden; margin-top: 10px; display: none; }
+    .progreso-export div { height: 100%; width: 0; background: var(--acento); }
+    section + section { margin-top: 10px; }
+    .cabecera { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+<div class="tarjeta">
+  <div class="cabecera">
+    <div>
+      <p class="etiqueta">Neurociencia Cognitiva e IA · UFV</p>
+      <h1>Estímulos para modelos de IA</h1>
+    </div>
+    <a class="btn sec" href="index.html">← Volver al test</a>
+  </div>
+  <p class="intro">Exporta exactamente los mismos pares que ven los participantes humanos (misma semilla, mismo orden) como imágenes PNG, junto con la clave de respuestas y el prompt. También genera datos de entrenamiento con figuras <b>distintas</b> a las del test para entrenar un modelo propio.</p>
+
+  <!-- ===================== 1. SET DEL TEST ===================== -->
+  <section>
+    <h2>1 · Set del test (para evaluar modelos)</h2>
+    <div class="opciones">
+      <label>Condición
+        <select id="t-condicion"></select>
+      </label>
+      <label>Tamaño de cada figura (px)
+        <input id="t-tam" type="number" value="320" min="64" max="1024" step="16">
+      </label>
+      <label>Imágenes
+        <select id="t-modo">
+          <option value="ambas">Par en una imagen + figuras por separado</option>
+          <option value="par">Solo par (una imagen, como lo ve el humano)</option>
+          <option value="separadas">Solo figuras por separado (izq / der)</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" id="t-practica" checked> Incluir los pares de práctica (para few-shot)</label>
+      <label class="check"><input type="checkbox" id="t-clave" checked> Mostrar respuestas en la vista previa</label>
+    </div>
+    <p class="nota" id="t-info"></p>
+    <div class="fila-botones">
+      <button class="btn principal" id="t-exportar">Descargar ZIP del test</button>
+    </div>
+    <div class="progreso-export" id="t-prog"><div></div></div>
+    <div class="galeria" id="t-galeria"></div>
+  </section>
+
+  <!-- ===================== 2. DATASET DE ENTRENAMIENTO ===================== -->
+  <section>
+    <h2>2 · Dataset de entrenamiento (modelo propio)</h2>
+    <p class="nota">Genera pares nuevos con figuras que <b>no aparecen en el test</b> (se excluyen sus formas y sus espejos). Las figuras se reparten entre entrenamiento y validación, así la validación mide si el modelo generaliza a figuras que nunca ha visto. Luego se evalúa con el set del test (apartado 1).</p>
+    <div class="opciones">
+      <label>Figuras
+        <select id="d-dim">
+          <option value="3d">3D (cubos, como el test)</option>
+          <option value="2d">2D (cuadrados, como el control 2D)</option>
+        </select>
+      </label>
+      <label>Número de pares
+        <input id="d-n" type="number" value="20000" min="10" max="50000" step="100">
+      </label>
+      <label>Tamaño de cada figura (px)
+        <input id="d-tam" type="number" value="96" min="32" max="512" step="16">
+      </label>
+      <label>Imágenes
+        <select id="d-modo">
+          <option value="separadas">Figuras por separado (red siamesa)</option>
+          <option value="par">Par en una imagen</option>
+        </select>
+      </label>
+      <label>Eje de giro
+        <select id="d-eje">
+          <option value="plano">En el plano (como el test)</option>
+          <option value="profundidad">En profundidad (eje vertical)</option>
+          <option value="aleatorio">Eje 3D al azar</option>
+          <option value="mezcla">Mezcla de los tres</option>
+        </select>
+      </label>
+      <label>Ángulo mínimo (°)
+        <input id="d-amin" type="number" value="0" min="0" max="180">
+      </label>
+      <label>Ángulo máximo (°)
+        <input id="d-amax" type="number" value="180" min="0" max="180">
+      </label>
+      <label>Figuras distintas
+        <input id="d-nfig" type="number" value="200" min="4" max="500">
+      </label>
+      <label>Cubos por figura (mín–máx)
+        <input id="d-cubos" value="8-12">
+      </label>
+      <label>Brazos por figura (mín–máx)
+        <input id="d-brazos" value="3-5">
+      </label>
+      <label>Fracción de figuras para validación
+        <input id="d-val" type="number" value="0.2" min="0" max="0.9" step="0.05">
+      </label>
+      <label>Semilla
+        <input id="d-semilla" type="number" value="777">
+      </label>
+    </div>
+    <p class="nota" id="d-info"></p>
+    <div class="fila-botones">
+      <button class="btn sec" id="d-muestra">Ver muestra</button>
+      <button class="btn principal" id="d-exportar">Generar y descargar ZIP de entrenamiento</button>
+    </div>
+    <div class="progreso-export" id="d-prog"><div></div></div>
+    <div class="galeria" id="d-galeria"></div>
+  </section>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/figuras.js"></script>
+<script src="js/ensayos.js"></script>
+<script src="js/resultados.js"></script>
+<script src="js/zip.js"></script>
+<script src="js/estimulos.js"></script>
+</body>
+</html>
