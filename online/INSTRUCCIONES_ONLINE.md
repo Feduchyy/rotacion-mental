@@ -92,6 +92,7 @@ En la hoja: **Archivo → Descargar → Valores separados por comas (.csv)**, un
   - edad, género y el resto de datos generales;
   - el cuestionario final (estrategia, dificultad, concentración, cansancio e interrupciones);
   - dispositivo y orden de los tests (`orden_bloques`), que también va en cada fila de `ensayos` junto con la posición de cada test;
+  - los descansos reales entre tests en segundos (`descansos_s`; el mínimo es de 30 s);
   - si completó todo (`estado`, `bloques`), duración y un resumen del test normal y del control 2D (precisión, TR mediano y pendiente).
 
   Se une con `ensayos` por `sujeto`.
