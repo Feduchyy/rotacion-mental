@@ -198,3 +198,4 @@ body.tactil .flecha { display: none; }
   .btn.resp { min-width: 0; flex: 1 1 40%; max-width: 220px; }
   .cinta-prueba { top: auto; bottom: 8px; }
 }
+.cuenta-atras { color: var(--suave); margin-top: 8px; }

@@ -232,18 +232,18 @@
   async function correrSesion(plan, ctx) {
     enCurso = true;
     const sesiones = [];
-    let primera = true;
+    let primera = true, descansoPrevioMs = null;
     for (let i = 0; i < plan.length; i++) {
       const s = await MR.Motor.correrBloque(ctx, plan[i], {
-        posicion: i + 1, total: plan.length, primera,
+        posicion: i + 1, total: plan.length, primera, descansoPrevioMs,
         alGuardar: (x) => MR.Almacen.guardar(x), sinSonido: 'continuar'
       });
       sesiones.push(s);
       if (s.estado === 'completa') primera = false;
       if (i < plan.length - 1) {
-        await MR.Motor.mensaje({
+        descansoPrevioMs = await MR.Motor.descanso({
           etiqueta: `Parte ${i + 1} de ${plan.length} terminada`, titulo: 'Descanso',
-          html: '<p>Descansa un momento. Cuando quieras, pasa a la siguiente parte.</p>', boton: 'Siguiente parte'
+          html: '<p>Descansa un momento antes de la siguiente parte.</p>', minimoS: MR.SESION.descansoMinimoS || 0
         });
       }
     }

@@ -84,10 +84,10 @@
     if (!prueba) guardarEstado('empezado');
     enCurso = true;
     const sesiones = [];
-    let primera = true;
+    let primera = true, descansoPrevioMs = null;
     for (let i = 0; i < plan.length; i++) {
       const s = await MR.Motor.correrBloque(ctx, plan[i], {
-        posicion: i + 1, total: plan.length, primera, sinSonido: O.sinSonido,
+        posicion: i + 1, total: plan.length, primera, sinSonido: O.sinSonido, descansoPrevioMs,
         alGuardar: (x) => MR.Almacen.guardar(x)
       });
       sesiones.push(s);
@@ -95,10 +95,10 @@
         primera = false;
         MR.Envio.enviar(MR.Envio.paqueteBloque(s)); // en segundo plano
         if (i < plan.length - 1) {
-          await MR.Motor.mensaje({
+          descansoPrevioMs = await MR.Motor.descanso({
             etiqueta: `Parte ${i + 1} de ${plan.length} terminada`, titulo: '¡Vas muy bien!',
             html: `<p>Descansa un momento. Te ${plan.length - i - 1 === 1 ? 'queda 1 parte' : `quedan ${plan.length - i - 1} partes`}.</p>`,
-            boton: 'Siguiente parte'
+            minimoS: MR.SESION.descansoMinimoS || 0
           });
         }
       }
@@ -145,7 +145,8 @@
       precision_2d: r2d ? redondea(r2d.precision, 4) : '',
       tr_mediana_2d: r2d ? redondea(r2d.trMedianaAciertos, 1) : '',
       pendiente_2d: r2d ? redondea(r2d.pendiente, 3) : '',
-      version_test: 3   // 3 = sesión con los tres tests (normal, distracción y 2D) en orden contrabalanceado
+      descansos_s: sesiones.filter(s => s.descanso_previo_ms !== '' && s.descanso_previo_ms != null).map(s => Math.round(s.descanso_previo_ms / 100) / 10).join(' '),
+      version_test: 4   // 4 = tres tests en orden contrabalanceado, con descanso mínimo entre tests
     });
   }
 

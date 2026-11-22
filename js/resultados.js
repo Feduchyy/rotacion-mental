@@ -95,7 +95,9 @@ MR.COLUMNAS_CSV = [
   'modalidad', 'sesion_completa', 'posicion_bloque', 'orden_bloques', 'tam_figura_px', 'orientacion',
   'sonido_comprobado', 'practica_repetida', 'interrupciones', 'origen', 'prueba',
   // añadidas el 18/11/2026 (bloque secuencial del Estudio 2)
-  'presentacion', 'primera_ms', 'intervalo_ms', 'segunda_ms'
+  'presentacion', 'primera_ms', 'intervalo_ms', 'segunda_ms',
+  // añadida el 22/11/2026: lo que descansó la persona antes de este test (vacío en el primero)
+  'descanso_previo_ms'
 ];
 const COLS_PARTICIPANTE = ['edad', 'genero', 'mano', 'estudios', 'vision', 'experiencia_3d', 'test_previo'];
 const COLS_FINAL = ['estrategia', 'dificultad', 'concentracion', 'fatiga', 'interrupciones'];
@@ -107,7 +109,8 @@ const COLS_SESION = {
   sonido_comprobado: s => s.sonido_comprobado || '',
   practica_repetida: s => s.practica_repetida ? 1 : 0,
   origen: s => s.origen || '',
-  prueba: s => s.prueba ? 1 : 0
+  prueba: s => s.prueba ? 1 : 0,
+  descanso_previo_ms: s => s.descanso_previo_ms != null ? s.descanso_previo_ms : ''
 };
 
 function celdaCsv(v) {

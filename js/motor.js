@@ -181,6 +181,42 @@ window.MR = window.MR || {};
       });
     },
 
+    /* Descanso entre tests: el botón se activa tras minimoS segundos (igual para todos), con cuenta atrás.
+       Devuelve los ms que ha durado el descanso de verdad (desde que aparece la pantalla hasta que se pulsa). */
+    descanso({ etiqueta = '', titulo = 'Descanso', html = '', minimoS = 0, boton = 'Siguiente parte' } = {}) {
+      $('msg-etiqueta').textContent = etiqueta;
+      $('msg-titulo').textContent = titulo;
+      const b1 = $('msg-boton'), b2 = $('msg-boton2');
+      b2.hidden = true;
+      this.mostrar('p-mensaje');
+      const inicio = performance.now();
+      return new Promise(res => {
+        let hecho = false, listo = minimoS <= 0, intervalo = null;
+        const pintar = () => {
+          const quedan = Math.max(0, Math.ceil(minimoS - (performance.now() - inicio) / 1000));
+          listo = quedan === 0;
+          $('msg-texto').innerHTML = html + (minimoS > 0
+            ? `<p class="cuenta-atras">${listo ? 'Ya puedes seguir cuando quieras.' : `Podrás seguir en <b>${quedan} s</b>.`}</p>` : '');
+          b1.disabled = !listo;
+          b1.textContent = boton;
+          if (listo && intervalo) { clearInterval(intervalo); intervalo = null; }
+        };
+        const fin = () => {
+          if (hecho || !listo) return;
+          hecho = true;
+          if (intervalo) clearInterval(intervalo);
+          b1.onclick = null; b1.disabled = false;
+          document.removeEventListener('keydown', tecla);
+          res(Math.round(performance.now() - inicio));
+        };
+        const tecla = (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); fin(); } };
+        pintar();
+        if (!listo) intervalo = setInterval(pintar, 250);
+        b1.onclick = fin;
+        setTimeout(() => { if (!hecho) document.addEventListener('keydown', tecla); }, 400);
+      });
+    },
+
     /* ---------------- pantalla completa y pantalla encendida ---------------- */
     pedirPantallaCompleta() {
       const el = document.documentElement;
@@ -339,6 +375,7 @@ window.MR = window.MR || {};
         modalidad: ctx.modalidad || 'laboratorio', grupo: ctx.grupo,
         posicion_bloque: info.posicion, bloques_total: info.total,
         orden_bloques: ctx.ordenBloques || '', origen: ctx.origen || '', prueba: ctx.prueba ? 1 : 0,
+        descanso_previo_ms: info.descansoPrevioMs != null ? info.descansoPrevioMs : '',
         sonido_comprobado: '', practica_repetida: 0,
         participante: ctx.participante, cuestionarioFinal: {}, entorno: ctx.entorno,
         config: cfg,
