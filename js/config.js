@@ -170,7 +170,7 @@ MR.SESION = {
   bloques: ['sin_limite', 'distraccion', 'control_2d'],
   // Descanso entre tests: el botón «Siguiente parte» se activa a los descansoMinimoS segundos (igual para todos).
   // Se guarda lo que ha descansado cada persona de verdad antes de cada test (columna descanso_previo_ms).
-  descansoMinimoS: 30
+  descansoMinimoS: 10
   // Orden: se usan todas las permutaciones de los tests elegidos (con 3 tests, 6 órdenes; con 2, 2).
   //  · Laboratorio: según el número del código. P01 hace el 1.º orden, P02 el 2.º… P06 el 6.º,
   //    P07 vuelve al 1.º, y así sucesivamente (con 6, 12, 18… participantes queda equilibrado).
