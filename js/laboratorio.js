@@ -206,7 +206,6 @@
     pendiente = op;
     $('form-participante').reset();
     $('d-etiqueta').textContent = `Participante ${op.codigo}` + (op.ajustes ? ' · demostración' : '');
-    $('d-aviso-visual').hidden = !op.plan.some(k => MR.usaImagen(k));
     MR.Motor.mostrar('p-datos');
   }
   $('btn-volver-panel').addEventListener('click', () => { pendiente = null; volverAlPanel(); });

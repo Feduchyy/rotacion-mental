@@ -1,7 +1,7 @@
 /* =====================================================================
  *  VERSIÓN ONLINE (participar.html) para compartir por WhatsApp
  * ---------------------------------------------------------------------
- *  bienvenida → información y consentimiento → datos generales →
+ *  bienvenida → datos generales →
  *  test normal, test con distracción y control 2D, EN UN ORDEN AL AZAR
  *  (uno de los 6 posibles; se guarda en orden_bloques) → cuestionario
  *  final → resultados y envío.
@@ -65,31 +65,10 @@
       ? `Ya has hecho el test en este dispositivo (código <span class="codigo">${esc(previo.codigo)}</span>). ¡Gracias! Si <b>otra persona</b> quiere hacerlo en este mismo dispositivo, puede pulsar «Empezar».`
       : 'Parece que empezaste el test y no lo terminaste. Puedes volver a empezar desde el principio.';
   }
-  $('btn-bienvenida').onclick = () => MR.Motor.mostrar('p-consentimiento');
-
-  /* ---------- información y consentimiento ---------- */
-  $('c-edad-min').textContent = O.edadMinima;
-  $('info-legal').innerHTML = `
-    <h2>¿Qué es?</h2>
-    <p>Un experimento para un trabajo de clase de ${esc(O.responsables)}. Estudiamos cómo «giramos» figuras con la mente y lo comparamos con modelos de inteligencia artificial.</p>
-    <h2>¿Qué tendrás que hacer?</h2>
-    <p>Mirar parejas de figuras y decidir, lo más rápido y bien que puedas, si son la misma figura girada o su imagen en espejo. Son unos ${minutos} minutos${plan.length > 1 ? `, en ${plan.length} partes con descansos entre ellas` : ''}.${hay('sonido') ? ' En una de las partes sonarán pitidos y aparecerán formas de colores para distraerte, así que conviene tener sonido.' : ''}</p>
-    <h2>¿Es anónimo?</h2>
-    <p>Sí. No te pedimos el nombre, el correo ni el teléfono. Tus respuestas se guardan con un código aleatorio (<span class="codigo">${codigo}</span>), junto con algunos datos generales (edad, género…) y el tipo de dispositivo y navegador.</p>
-    <h2>¿Para qué se usan los datos?</h2>
-    <p>Solo para este trabajo académico. Los resultados se presentan siempre en conjunto, nunca los de una persona concreta.</p>
-    <h2>¿Es obligatorio?</h2>
-    <p>No. Participar es voluntario y puedes dejarlo cuando quieras cerrando la página. Las partes que ya hayas terminado sí se habrán guardado.${O.contacto ? ` Si quieres que las borremos, escribe a <a href="mailto:${esc(O.contacto)}">${esc(O.contacto)}</a> indicando tu código.` : ''}</p>
-    ${hay('imagen') ? '<p class="aviso">⚠ En una de las partes aparecen y desaparecen <b>formas de colores</b> sin parar. Si tienes epilepsia fotosensible, por favor no participes.</p>' : ''}`;
-  $('form-consentimiento').onsubmit = (ev) => { ev.preventDefault(); MR.Motor.mostrar('p-datos'); };
+  $('btn-bienvenida').onclick = () => MR.Motor.mostrar('p-datos');
 
   /* ---------- datos generales ---------- */
   const edad = $('f-edad');
-  edad.min = O.edadMinima;
-  edad.addEventListener('input', () => {
-    const v = parseInt(edad.value, 10);
-    edad.setCustomValidity(v && v < O.edadMinima ? `Para participar hay que tener ${O.edadMinima} años o más.` : '');
-  });
   $('form-datos').onsubmit = (ev) => { ev.preventDefault(); empezar(); };
 
   /* ---------- sesión ---------- */

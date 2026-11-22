@@ -34,34 +34,19 @@
     </div>
     <p class="aviso" id="b-aviso" hidden></p>
     <div class="fila-botones centro"><button type="button" class="btn principal grande" id="btn-bienvenida">Empezar</button></div>
-    <p class="nota">Es anónimo: no te pediremos el nombre, el correo ni el teléfono.</p>
   </div>
 </section>
 
-<!-- ============ 2. INFORMACIÓN Y CONSENTIMIENTO ============ -->
-<section id="p-consentimiento" class="pantalla">
-  <div class="tarjeta">
-    <p class="etiqueta">Paso 1 de 2</p>
-    <h1>Antes de empezar</h1>
-    <div class="info-legal" id="info-legal"></div>
-    <form id="form-consentimiento">
-      <label class="check"><input type="checkbox" id="c-edad" required><span>Tengo <b id="c-edad-min">18</b> años o más.</span></label>
-      <label class="check"><input type="checkbox" id="c-acepto" required><span>He leído la información y acepto participar.</span></label>
-      <div class="fila-botones"><button class="btn principal" type="submit">Acepto y continúo</button></div>
-    </form>
-  </div>
-</section>
 
 <!-- ============ 3. DATOS GENERALES ============ -->
 <section id="p-datos" class="pantalla">
   <div class="tarjeta">
-    <p class="etiqueta">Paso 2 de 2</p>
     <h1>Unos datos generales</h1>
-    <p class="nota">Nos sirven para describir a quién ha participado. Solo la edad es obligatoria.</p>
+    <p class="nota">Solo la edad es obligatoria.</p>
     <form id="form-datos" autocomplete="off">
       <div class="rejilla">
         <label>Edad *
-          <input id="f-edad" type="number" min="18" max="99" required inputmode="numeric">
+          <input id="f-edad" type="number" min="10" max="99" required inputmode="numeric">
         </label>
         <label>Género
           <select id="f-genero">

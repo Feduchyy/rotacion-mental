@@ -13,6 +13,8 @@ Enlace en WhatsApp ──► participar.html (GitHub Pages)
 
 Si el envío automático falla, o no está configurado, al final la persona puede **mandar su archivo por WhatsApp** (botón «Enviar el archivo por WhatsApp…») o descargarlo.
 
+> **Estado (21/11/2026): publicado y conectado.** Enlace: https://feduchyy.github.io/rotacion-mental/participar.html. Los datos van a la hoja de Google del grupo (pasos 1 a 3 hechos; falta el correo de `contacto`). Para publicar un cambio en el test: `powershell -ExecutionPolicy Bypass -File C:\datos_rotacion\publicar_test.ps1 "qué ha cambiado"` (el repositorio git está fuera de OneDrive, en `C:\datos_rotacion\web_rotacion_mental.git`).
+
 ---
 
 ## Paso 1. Crear la hoja que recibe los datos (unos 5 minutos, una sola vez)
