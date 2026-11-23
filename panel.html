@@ -42,17 +42,19 @@
     .seccion { scroll-margin-top: 64px; }
     .seccion > header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; margin-bottom: 4px; }
     .seccion > header h2 { margin: 0; font-size: 1.35rem; }
-    .pregunta { color: var(--suave); margin: 2px 0 12px; font-size: .95rem; max-width: 920px; }
+    .meta { color: var(--suave); margin: 2px 0 10px; font-size: .88rem; }
     .veredicto { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 700; border-radius: 999px; padding: 4px 11px; white-space: nowrap; }
     .veredicto.bien { color: var(--bien); background: var(--bien-fondo); }
     .veredicto.medio { color: var(--medio); background: var(--medio-fondo); }
     .veredicto.mal { color: var(--mal); background: var(--mal-fondo); }
     .veredicto.neutro { color: var(--neutro); background: var(--neutro-fondo); }
 
-    .baldosas { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 4px 0 14px; }
-    .baldosa { background: #fafcfb; border: 1px solid var(--borde); border-radius: 12px; padding: 12px 14px; }
-    .baldosa .v { font-size: 1.65rem; font-weight: 650; line-height: 1.15; }
-    .baldosa .t { font-size: .8rem; color: var(--suave); margin-top: 2px; }
+    /* cifras clave */
+    .cifras { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 10px; margin: 12px 0 4px; }
+    .cifra { background: #fafcfb; border: 1px solid var(--borde); border-radius: 12px; padding: 11px 13px; }
+    .cifra .v { font-size: 1.45rem; font-weight: 650; line-height: 1.15; font-variant-numeric: tabular-nums; }
+    .cifra .t { font-size: .8rem; color: var(--texto); margin-top: 3px; }
+    .cifra .s { font-size: .72rem; color: var(--suave); margin-top: 3px; font-variant-numeric: tabular-nums; }
 
     .rejilla-graficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 16px; margin: 10px 0; }
     .grafico { background: var(--surface-1); border: 1px solid var(--borde); border-radius: 12px; padding: 14px 16px 8px; min-width: 0; }
@@ -69,14 +71,11 @@
     details.tabla-datos summary { cursor: pointer; font-size: .8rem; color: var(--suave); margin: 4px 0; }
     .vacio { color: var(--suave); font-size: .9rem; padding: 14px 0; }
 
-    .claves { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; margin-top: 6px; }
-    .caja-datos, .caja-discusion { border-radius: 12px; padding: 12px 16px; font-size: .9rem; }
-    .caja-datos { border: 1px solid var(--borde); background: #fafcfb; }
-    .caja-discusion { border: 1px solid #f3d9a8; background: #fffaf0; }
-    .caja-datos h4, .caja-discusion h4 { margin: 0 0 6px; font-size: .9rem; }
-    .caja-datos ul, .caja-discusion ul { margin: 0; padding-left: 18px; }
-    .caja-datos li, .caja-discusion li { margin: 5px 0; line-height: 1.45; }
     .estad { font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+    .dos-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 14px 28px; }
+    .dos-col h4 { margin: 0 0 8px; font-size: .9rem; }
+    .lista-excl { font-size: .84rem; columns: 2; margin: 4px 0; }
+    .tabla-corr { max-width: 620px; }
 
     .tabla-hip td { vertical-align: middle; text-align: left !important; }
     .tabla-hip th { text-align: left !important; }
@@ -85,6 +84,10 @@
     .barras-h { display: grid; grid-template-columns: minmax(150px, 280px) 1fr 54px; gap: 6px 10px; align-items: center; font-size: .86rem; }
     .barras-h .pista { background: #eef1f0; border-radius: 6px; height: 16px; overflow: hidden; }
     .barras-h .lleno { background: var(--acento); height: 100%; border-radius: 0 4px 4px 0; }
+    .barras-h .lleno.gris { background: var(--suave); }
+    details.criterios-caja > summary { cursor: pointer; font-weight: 600; font-size: .92rem; }
+    details.criterios-caja > summary .nota { font-weight: 400; margin-left: 8px; }
+    details.criterios-caja[open] > summary { margin-bottom: 10px; }
     .barras-h .n { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
     .medida-sel { display: inline-flex; flex-direction: row; gap: 8px; align-items: center; font-size: .9rem; margin: 2px 0 4px; }
     .medida-sel select { width: auto; padding: 5px 8px; }
@@ -94,7 +97,7 @@
     @media (max-width: 560px) { .rejilla-graficos { grid-template-columns: 1fr; } .barras-h { grid-template-columns: 110px 1fr 40px; } }
     @media print {
       .nav-secciones, .criterios, .btn-png, #tarjeta-datos, details.tabla-datos { display: none !important; }
-      .grafico, .caja-datos, .caja-discusion { break-inside: avoid; }
+      .grafico, .cifra { break-inside: avoid; }
       body { background: #fff; }
     }
   </style>
@@ -106,7 +109,7 @@
     <div>
       <p class="etiqueta">Neurociencia Cognitiva e IA · UFV</p>
       <h1>Panel de resultados</h1>
-      <p class="nota" style="margin:0">Personas (laboratorio y online) frente a IA, organizado por hipótesis. Todo se calcula en este navegador: no se sube nada.</p>
+      <p class="nota" style="margin:0">Rotación mental: personas frente a IA. Todo se calcula en este navegador.</p>
     </div>
     <nav class="enlaces-app"><a class="btn sec" href="index.html">← Laboratorio</a></nav>
   </header>
@@ -131,8 +134,8 @@
   <div id="resultados" hidden>
     <nav class="nav-secciones" id="nav-secciones"></nav>
     <div class="tarjeta ancha">
+      <details class="criterios-caja"><summary>Criterios de exclusión y comparación<span class="nota" id="n-analizadas"></span></summary>
       <div class="criterios" id="criterios">
-        <b style="margin-right:4px">Criterios</b>
         <label><input type="checkbox" id="f-prueba" checked> Quitar datos de prueba</label>
         <label>Modalidad <select id="f-modalidad"><option value="">Todas</option><option value="laboratorio">Laboratorio</option><option value="online">Online</option></select></label>
         <label><input type="checkbox" id="f-completo" checked> Exigir el test normal completo</label>
@@ -143,6 +146,7 @@
         <label><input type="checkbox" id="f-azar"> Comprobación: quitar los tests que no superan el azar</label>
         <label><input type="checkbox" id="f-primero"> IA: personas solo en el test que hicieron primero</label>
       </div>
+      </details>
     </div>
     <div id="secciones"></div>
   </div>

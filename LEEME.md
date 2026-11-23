@@ -90,7 +90,7 @@ Está organizado por hipótesis, con una barra de navegación:
 - **Diferencias individuales**: género, estudios, videojuegos, estrategia, dispositivo y correlaciones (edad, dificultad, concentración, cansancio), con la medida que se elija. Los grupos de menos de 3 personas no se muestran.
 - **Participantes**: tabla con el estado de cada persona y el motivo de exclusión.
 
-Cada apartado tiene **datos clave** (estadísticos) y **posibles explicaciones para la discusión**, generadas con los datos cargados. Cada gráfico tiene **«Ver tabla»** y un botón **PNG** para descargarlo (para la memoria). Con Ctrl+P se imprime sin los controles.
+Cada apartado tiene sus gráficos y una fila de **cifras clave** (cada una con su contraste: t, F o p). No hay textos de interpretación: el panel es solo para ver los datos. Los criterios están en un desplegable arriba. Cada gráfico tiene **«Ver tabla»** y un botón **PNG** para descargarlo (para la memoria). Con Ctrl+P se imprime sin los controles.
 
 Criterios (arriba): quitar los datos de prueba, modalidad, exigir el test normal completo, precisión mínima en el test normal (60 %), quitar a quien respondía sin mirar (TR mediano < 300 ms), quitar pares de < 0,3 s o > 20 s, quitar de la distracción a quien no oyó los pitidos, comprobación sin los tests que no superan el azar y comparación con la IA solo con el test que cada persona hizo primero.
 

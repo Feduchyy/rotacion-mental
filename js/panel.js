@@ -8,8 +8,7 @@
  *    H7 2D frente a 3D · H2 distracción · orden (práctica y cansancio) ·
  *    personas frente a IA (H3–H6) · diferencias individuales · participantes
  *  Cada gráfico tiene tabla de datos y botón para descargarlo en PNG.
- *  Los veredictos y las «posibles explicaciones» se generan con los datos
- *  cargados (p < 0,05); son un punto de partida para la discusión.
+ *  Los veredictos de las hipótesis son automáticos (p < 0,05).
  *  Todo se calcula en el navegador; no se envía nada.
  * ===================================================================== */
 (function () {
@@ -34,8 +33,6 @@
   const signo = (x, f) => esNum(x) ? (x > 0 ? '+' : x < 0 ? '−' : '') + f(Math.abs(x)) : '—';
   const fp = (p) => !esNum(p) ? '' : p < 0.001 ? 'p < 0,001' : 'p = ' + p.toFixed(3).replace('.', ',');
   const sig = (r) => r && esNum(r.p) && r.p < 0.05;
-  const est = (t) => `<span class="estad">${t}</span>`;
-  const tTexto = (r) => r && esNum(r.t) ? est(`t(${num(r.gl, r.gl % 1 ? 1 : 0)}) = ${num(r.t, 2)}, ${fp(r.p)}${esNum(r.d) ? `, d = ${num(r.d, 2)}` : ''}`) : '';
 
   /* =================== estadística =================== */
   const limpio = (xs) => xs.filter(esNum);
@@ -98,7 +95,6 @@
     const gl1 = k - 1, gl2 = (k - 1) * (n - 1), F = (ssC / gl1) / (ssE / gl2);
     return { F, gl1, gl2, p: pF(F, gl1, gl2), eta: ssC / (ssC + ssE), n };
   }
-  const fTexto = (r) => r ? est(`F(${r.gl1}, ${r.gl2}) = ${num(r.F, 2)}, ${fp(r.p)}, η²p = ${num(r.eta, 2)}`) : '';
   function rangos(xs) {
     const idx = xs.map((x, i) => [x, i]).sort((a, b) => a[0] - b[0]); const r = new Array(xs.length);
     for (let i = 0; i < idx.length;) { let j = i; while (j + 1 < idx.length && idx[j + 1][0] === idx[i][0]) j++; const rr = (i + j) / 2 + 1; for (let k = i; k <= j; k++) r[idx[k][1]] = rr; i = j + 1; }
@@ -274,7 +270,7 @@
     .forEach(id => $(id).addEventListener('input', recalcular));
 
   function pintarArchivos() {
-    $('archivos').innerHTML = cargados.map(c => `<span class="chip ${c.tipo === 'simulados' ? 'prueba' : c.tipo === 'IA' ? 'online' : ''}">${esc(c.nombre)} · ${c.n} ${c.tipo === 'hoja sesiones' ? 'personas' : 'filas'} · ${esc(c.tipo)}</span>`).join('');
+    $('archivos').innerHTML = cargados.map(c => `<span class="chip ${c.tipo === 'simulados' ? 'prueba' : c.tipo === 'IA' ? 'online' : ''}">${esc(c.nombre)} · ${c.tipo === 'hoja sesiones' ? `${c.n} personas` : c.n ? `${c.n} filas` : 'ya incluido en otro archivo'} · ${esc(c.tipo)}</span>`).join('');
     $('aviso-sim').hidden = !filas.some(r => r.simulado);
     $('resultados').hidden = !filas.length;
   }
@@ -561,149 +557,64 @@
   const badge = (v) => v ? `<span class="veredicto ${v.clase}">${v.icono} ${esc(v.texto)}</span>` : '';
 
   function hipotesis(A) {
-    const { h1, h2, h7, angulos } = A;
-    const a0 = angulos[0], aN = angulos[angulos.length - 1];
-    const out = [];
+    const { h1, h2, h7 } = A;
+    const chat = A.ia.chat, out = [];
+    const ultimo = (xs) => xs[xs.length - 1];
     // H1
-    let v1 = V.neutro('Sin datos'), r1 = 'Faltan datos del test normal.';
+    let v = V.neutro('Sin datos'), r = '—';
     if (h1.pend) {
-      const baja = h1.curvaPrec[h1.curvaPrec.length - 1] < h1.curvaPrec[0];
-      v1 = sig(h1.pend) && h1.pend.m > 0 && sig(h1.anovaPrec) && baja ? V.bien('Se cumple') : sig(h1.pend) && h1.pend.m > 0 ? V.medio('En parte') : V.mal('No se cumple');
-      r1 = `TR de ${seg(h1.curva[0])} a ${a0}° a ${seg(h1.curva[h1.curva.length - 1])} a ${aN}° (${num(h1.pend.m, 1)} ms/°, ${fp(h1.pend.p)}; R² = ${num(h1.r2, 2)}); precisión de ${pct(h1.curvaPrec[0])} a ${pct(h1.curvaPrec[h1.curvaPrec.length - 1])}.`;
+      const baja = ultimo(h1.curvaPrec) < h1.curvaPrec[0];
+      v = sig(h1.pend) && h1.pend.m > 0 && sig(h1.anovaPrec) && baja ? V.bien('Se cumple') : sig(h1.pend) && h1.pend.m > 0 ? V.medio('En parte') : V.mal('No se cumple');
+      r = `${num(h1.pend.m, 1)} ms/° (${fp(h1.pend.p)}) · R² ${num(h1.r2, 3)} · precisión ${pct(h1.curvaPrec[0])} → ${pct(ultimo(h1.curvaPrec))}`;
     }
-    out.push({ id: 'h1', h: 'H1', esperado: 'En las personas, el TR crece de forma lineal con el ángulo y la precisión baja.', r: r1, v: v1 });
+    out.push({ id: 'h1', h: 'H1', texto: 'El TR crece con el ángulo', r, v });
     // H2
-    let v2 = V.neutro('Sin datos'), r2 = 'Faltan personas con los dos tests.';
+    v = V.neutro('Sin datos'); r = '—';
     if (h2.prec && h2.tr) {
       const bajaPrec = h2.prec.m < 0 && sig(h2.prec), subeTr = h2.tr.m > 0 && sig(h2.tr), bajaTr = h2.tr.m < 0 && sig(h2.tr);
-      v2 = bajaPrec && subeTr ? V.bien('Se cumple') : bajaTr ? V.mal('No: se responde más rápido') : bajaPrec || subeTr ? V.medio('En parte') : V.medio('No concluyente');
-      r2 = `Precisión ${signo(h2.prec.m, x => pp(x))} (${fp(h2.prec.p)}); TR ${signo(h2.tr.m, ms)} (${fp(h2.tr.p)}); interacción con el ángulo ${h2.inter ? fp(h2.inter.p) : '—'}; n = ${h2.n}.`;
+      v = bajaPrec && subeTr ? V.bien('Se cumple') : bajaPrec && bajaTr ? V.medio('En parte: peor, pero más rápido') : bajaPrec || subeTr ? V.medio('En parte') : bajaTr ? V.mal('No: más rápido') : V.medio('No concluyente');
+      r = `precisión ${signo(h2.prec.m, x => pp(x))} (${fp(h2.prec.p)}) · TR ${signo(h2.tr.m, ms)} (${fp(h2.tr.p)})`;
     }
-    out.push({ id: 'h2', h: 'H2', esperado: 'La distracción baja la precisión y sube el TR, sobre todo en los giros grandes.', r: r2, v: v2 });
+    out.push({ id: 'h2', h: 'H2', texto: 'La distracción empeora el rendimiento', r, v });
     // H3–H5 (modelos generalistas por chat)
-    const chat = A.ia.chat;
     const pers3 = media(A.ia.humanosIA('sin_limite').map(p => p.tests.sin_limite.prec));
     if (chat.length) {
       const tot = chat.map(a => [a, A.ia.ia[a].sin_limite && A.ia.ia[a].sin_limite.total]).filter(x => esNum(x[1]));
       const peores = tot.filter(x => x[1] < pers3).length;
-      out.push({ id: 'ia', h: 'H3', esperado: 'Las personas superan a los modelos generalistas, que quedan cerca del azar.', r: `Personas ${pct(pers3, 1)} en 3D; ${tot.map(([a, t]) => `${esc(a)} ${pct(t, 1)}`).join(', ')}.`, v: peores === tot.length ? V.bien('Se cumple') : peores ? V.medio('En parte') : V.mal('No se cumple') });
-      out.push({ id: 'ia', h: 'H4', esperado: 'Los modelos nuevos superan a los antiguos y los razonadores a los rápidos.', r: 'Comparad los modelos en el gráfico «Precisión por agente» según su generación y si razonan.', v: V.neutro('Ver gráfico') });
+      out.push({ id: 'ia', h: 'H3', texto: 'Las personas superan a la IA generalista', r: `personas ${pct(pers3, 1)} · ${tot.map(([a, t]) => `${esc(a)} ${pct(t, 1)}`).join(' · ')}`, v: peores === tot.length ? V.bien('Se cumple') : peores ? V.medio('En parte') : V.mal('No se cumple') });
+      out.push({ id: 'ia', h: 'H4', texto: 'IA nueva > antigua; razonadora > rápida', r: tot.map(([a, t]) => `${esc(a)} ${pct(t, 1)}`).join(' · '), v: V.neutro('Ver gráfico') });
     } else {
-      out.push({ id: 'ia', h: 'H3', esperado: 'Las personas superan a los modelos generalistas, que quedan cerca del azar.', r: 'Pendiente de pasar el test por chat a los modelos generalistas (test_chat_ia/).', v: V.neutro('Faltan datos') });
-      out.push({ id: 'ia', h: 'H4', esperado: 'Los modelos nuevos superan a los antiguos y los razonadores a los rápidos.', r: 'Pendiente de los modelos por chat.', v: V.neutro('Faltan datos') });
+      out.push({ id: 'ia', h: 'H3', texto: 'Las personas superan a la IA generalista', r: '—', v: V.neutro('Faltan datos') });
+      out.push({ id: 'ia', h: 'H4', texto: 'IA nueva > antigua; razonadora > rápida', r: '—', v: V.neutro('Faltan datos') });
     }
-    out.push({ id: 'ia', h: 'H5', esperado: 'En los modelos que razonan, los tokens de razonamiento aumentan con el ángulo.', r: 'Por chat no se ven los tokens ni la latencia; solo se podría aproximar con la longitud del razonamiento.', v: V.neutro('No medible por chat') });
+    out.push({ id: 'ia', h: 'H5', texto: 'Los tokens crecen con el ángulo', r: '—', v: V.neutro('No medible por chat') });
     // H6
     const ia9 = A.ia.ia['IA-9'] && A.ia.ia['IA-9'].sin_limite;
-    let v6 = V.neutro('Faltan datos'), r6 = 'Carga ia9_3d.csv (modelo_siames/resultados).';
+    v = V.neutro('Faltan datos'); r = '—';
     if (ia9) {
       const vals = [...ia9.porA.values()].map(x => x.y), infs = [...ia9.inf.values()];
       const plano = Math.max(...vals) - Math.min(...vals) <= 0.05, tiempoPlano = infs.length >= 2 && Math.max(...infs) / Math.min(...infs) < 1.25;
       const superaChat = chat.length && chat.every(a => !A.ia.ia[a].sin_limite || A.ia.ia[a].sin_limite.total < ia9.total);
-      v6 = plano && tiempoPlano ? (chat.length ? (superaChat ? V.bien('Se cumple') : V.medio('En parte')) : V.medio('Se cumple lo medido')) : V.mal('No se cumple');
-      r6 = `IA-9: ${pct(ia9.total, 1)} en 3D, de ${pct(Math.min(...vals))} a ${pct(Math.max(...vals))} según el ángulo; tiempo de cálculo ${infs.length ? `de ${num(Math.min(...infs), 2)} a ${num(Math.max(...infs), 2)} ms por par` : 'sin datos'}.${chat.length ? '' : ' Falta compararla con los generalistas.'}`;
+      v = plano && tiempoPlano ? (chat.length ? (superaChat ? V.bien('Se cumple') : V.medio('En parte')) : V.medio('Se cumple lo medido')) : V.mal('No se cumple');
+      r = `IA-9 ${pct(ia9.total, 1)} · ${pct(Math.min(...vals))}–${pct(Math.max(...vals))} por ángulo${infs.length ? ` · cálculo ${num(Math.min(...infs), 2)}–${num(Math.max(...infs), 2)} ms` : ''}`;
     }
-    out.push({ id: 'ia', h: 'H6', esperado: 'La red entrenada supera a los generalistas y su tiempo de cálculo no depende del ángulo.', r: r6, v: v6 });
+    out.push({ id: 'ia', h: 'H6', texto: 'La red especializada no depende del ángulo', r, v });
     // H7
-    let v7 = V.neutro('Sin datos'), r7 = 'Faltan personas con el test normal y el 2D.';
+    v = V.neutro('Sin datos'); r = '—';
     if (h7.tr && h7.pend2) {
       const ok = sig(h7.pend2) && h7.pend2.m > 0 && h7.tr.m < 0 && sig(h7.tr) && h7.pend.m < 0 && sig(h7.pend);
-      v7 = ok ? V.bien(chat.length ? 'Se cumple' : 'Se cumple en personas') : (sig(h7.pend2) ? V.medio('En parte') : V.mal('No se cumple'));
-      const ia9_2 = A.ia.ia['IA-9'] && A.ia.ia['IA-9'].control_2d;
-      r7 = `Personas: TR 2D ${signo(h7.tr.m, ms)} (${fp(h7.tr.p)}); pendiente ${num(h7.pend2m, 1)} frente a ${num(h7.pend3, 1)} ms/° (${fp(h7.pend.p)}), pero > 0 (${fp(h7.pend2.p)}).` +
-        (ia9_2 && ia9 ? ` IA-9 (solo 3D): ${pct(ia9_2.total, 1)} en 2D frente a ${pct(ia9.total, 1)} en 3D.` : '');
+      v = ok ? V.bien(chat.length ? 'Se cumple' : 'Se cumple en personas') : (sig(h7.pend2) ? V.medio('En parte') : V.mal('No se cumple'));
+      r = `2D ${signo(h7.tr.m, ms)} (${fp(h7.tr.p)}) · ${num(h7.pend2m, 1)} frente a ${num(h7.pend3, 1)} ms/°`;
     }
-    out.push({ id: 'h7', h: 'H7', esperado: 'Personas: efecto del ángulo también en 2D, más rápido y con menos pendiente. IA: mejor en 2D; menos distancia con las personas.', r: r7, v: v7 });
+    out.push({ id: 'h7', h: 'H7', texto: '2D más fácil, pero con efecto del ángulo', r, v });
     // Orden (control)
     const difs = A.orden.filter(x => x.wPrec).map(x => [x.c, x.wPrec.m]);
     if (difs.length) {
       const pos = difs.filter(d => d[1] > 0).length;
-      out.push({ id: 'orden', h: 'Orden', esperado: 'Control: la práctica mejora el test que se hace después (por eso el orden se contrabalancea).',
-        r: difs.map(([c, d]) => `${NOMBRE[c]} ${signo(d, x => pp(x, 0))}`).join(' · ') + ' (después − en 1.er lugar).',
+      out.push({ id: 'orden', h: 'Orden', texto: 'Control: efecto de la práctica', r: difs.map(([c, d]) => `${CORTO[c]} ${signo(d, x => pp(x, 0))}`).join(' · '),
         v: pos === difs.length ? V.bien('Hay práctica') : pos ? V.medio('Práctica y cansancio') : V.mal('Peor al final') });
     }
     return out;
-  }
-
-  /* =================== posibles explicaciones (para la discusión) =================== */
-  function discusionH1(A) {
-    const { h1, angulos } = A, d = [];
-    if (!h1.pend) return d;
-    const aN = angulos[angulos.length - 1];
-    d.push(h1.r2 >= 0.9
-      ? `Cada grado de giro añade unos <b>${num(h1.pend.m, 0)} ms</b> y la recta encaja muy bien (R² = ${num(h1.r2, 2)} con las medias). Es el patrón lineal de Shepard y Metzler (1971): se interpreta como un giro mental analógico, paso a paso, como si se girara un objeto real.`
-      : `El TR sube con el ángulo (${num(h1.pend.m, 0)} ms/°), aunque no del todo en línea recta (R² = ${num(h1.r2, 2)}): quizá en los giros grandes se cambie de estrategia.`);
-    if (h1.velocidad) d.push(`Velocidad de giro ≈ <b>${num(h1.velocidad, 0)} °/s</b>, más lenta que en el experimento original (unos 60 °/s). Allí había 8 personas muy entrenadas, con cientos de pares cada una; aquí, gente sin práctica, muchos con el móvil (figuras pequeñas) y un giro fijo de 15° en profundidad que obliga a interpretar la figura.`);
-    if (h1.curvaPrec[h1.curvaPrec.length - 1] < h1.curvaPrec[0]) d.push(`La precisión también cae con el giro (de ${pct(h1.curvaPrec[0])} a ${pct(h1.curvaPrec[h1.curvaPrec.length - 1])} a ${aN}°): con giros grandes la imagen mental se degrada, o la persona responde antes de terminar de girar (intercambio velocidad-precisión).`);
-    const conN = A.incluidos.filter(p => p.tests.sin_limite);
-    const pI = media(conN.map(p => p.tests.sin_limite.porA[aN].precI)), pE = media(conN.map(p => p.tests.sin_limite.porA[aN].precE));
-    if (esNum(pI) && esNum(pE) && pE - pI > 0.05) d.push(`A ${aN}° fallan sobre todo los pares «igual» (${pct(pI)} de aciertos) y no tanto los espejo (${pct(pE)}): ante la duda se responde «espejo». Tiene sentido si no se consigue completar el giro: si la figura no encaja, «parece» su imagen en espejo.`);
-    if (h1.espejo && h1.espejo.m > 0) d.push(`Los pares espejo tardan ${ms(h1.espejo.m)} más que los iguales (${fp(h1.espejo.p)}): para decir «espejo» hay que girar y además comprobar que no encaja; se decide por descarte.`);
-    return d;
-  }
-  function discusionH7(A) {
-    const h = A.h7, d = [];
-    if (!h.tr) return d;
-    if (h.tr.m < 0) d.push(`Con figuras planas se responde <b>${seg(-h.tr.m)} antes</b> y la pendiente baja a ${num(h.pend2m, 0)} ms/° (frente a ${num(h.pend3, 0)} en 3D). Sin profundidad no hay que reconstruir la forma tridimensional a partir del dibujo ni imaginar los cubos que se tapan.`);
-    if (h.pend2 && h.pend2.m > 0 && sig(h.pend2)) d.push(`Aun así, el ángulo sigue costando en 2D (${fp(h.pend2.p)}): la dificultad del 3D se suma a la del giro, no la sustituye. Coincide con Cooper y Shepard (1973), que encontraron el mismo efecto con letras.`);
-    if (esNum(h.fa2) && esNum(h.fa3) && h.fa2 > h.fa3) d.push(`En 2D se responde «igual» a más pares espejo (${pct(h.fa2)} frente a ${pct(h.fa3)} en 3D${h.fa ? `, ${fp(h.fa.p)}` : ''}). Una figura plana se puede «dar la vuelta» como una pieza de papel, así que su imagen en espejo puede parecer la misma figura: la consigna es más ambigua en 2D. Puede explicar los pocos tests 2D al azar.`);
-    if (h.prec && !sig(h.prec)) d.push(`La precisión es parecida en 2D y en 3D (${signo(h.prec.m, x => pp(x))}, ${fp(h.prec.p)}): las dos están cerca del techo, así que la diferencia se ve sobre todo en el tiempo.`);
-    return d;
-  }
-  function discusionH2(A) {
-    const h = A.h2, d = [], aN = A.angulos[A.angulos.length - 1];
-    if (!h.tr) return d;
-    if (h.tr.m < 0) d.push(`Con distracción se responde <b>${ms(-h.tr.m)} más rápido</b> (${fp(h.tr.p)}), no más lento. Parece un <b>intercambio velocidad-precisión</b>: los pitidos y las formas son molestos y la gente se apresura para acabar antes, a costa de algunos errores.`);
-    else if (sig(h.tr)) d.push(`La distracción alarga el TR ${ms(h.tr.m)} (${fp(h.tr.p)}): compite por la atención y la memoria de trabajo que hacen falta para girar la figura.`);
-    const peor = h.porA.filter(x => esNum(x.d)).sort((a, b) => a.d - b.d)[0];
-    if (h.prec) d.push(`La precisión cambia ${signo(h.prec.m, x => pp(x))} (${fp(h.prec.p)})${peor && peor.d < 0 ? `; la caída mayor es a ${peor.a}° (${signo(peor.d, x => pp(x, 0))})${peor.a === aN ? ', los giros que más cargan la memoria de trabajo' : ''}` : ''}.`);
-    if (h.ordenW && esNum(h.distPrimero) && esNum(h.distDespues)) d.push(`El efecto depende del orden: quien empezó por la distracción acertó un <b>${pct(h.distPrimero)}</b> en ese test; quien ya había hecho otro antes, un <b>${pct(h.distDespues)}</b> (interacción condición × orden, ${fp(h.ordenW.p)}). La práctica protege: con la tarea ya aprendida, la distracción quita menos recursos.`);
-    d.push(`Limitaciones: online no se controla el volumen ni el entorno${h.sinSonido ? `; ${h.sinSonido} persona(s) no oyeron los pitidos` : ''}; y todos los pares llevan distracción, así que no se puede comparar dentro del mismo test.`);
-    return d;
-  }
-  function discusionOrden(A) {
-    const d = [], dur = mediana(A.muestra.duracion);
-    const por = Object.fromEntries(A.orden.map(x => [x.c, x]));
-    const di = por.distraccion && por.distraccion.wPrec;
-    if (di && di.m > 0) d.push(`El test con distracción mejora mucho si no es el primero (${signo(di.m, x => pp(x))}, ${fp(di.p)}): aprender la tarea con pitidos y formas a la vez es más difícil; con práctica previa, la distracción molesta menos.`);
-    const peores = ['sin_limite', 'control_2d'].filter(c => por[c] && por[c].wPrec && por[c].wPrec.m < 0);
-    if (peores.length) d.push(`${peores.map(c => NOMBRE[c]).join(' y ')} salen peor al final (${peores.map(c => signo(por[c].wPrec.m, x => pp(x))).join(' y ')}): en una sesión online${esNum(dur) ? ` de ~${num(dur, 0)} min` : ''} aparecen cansancio y prisa (también se responde más rápido). Es un efecto de fatiga, contrario al de práctica.`);
-    d.push(`Como el orden está contrabalanceado, estos efectos se reparten entre los tests: no sesgan las comparaciones dentro de cada persona, pero añaden ruido. Ojo: son comparaciones entre personas distintas, con unas ${num(media(A.orden.flatMap(x => x.porPos.map(q => q.n)).filter(n => n > 0)), 0)} por posición.`);
-    return d;
-  }
-  function discusionIA(A) {
-    const d = [], { ia, chat } = A.ia, ang = A.angulos;
-    const pers = A.incluidos.filter(p => p.tests.sin_limite);
-    const ia9 = ia['IA-9'] && ia['IA-9'].sin_limite, ia9_2 = ia['IA-9'] && ia['IA-9'].control_2d, mix2 = ia['IA-9mix'] && ia['IA-9mix'].control_2d;
-    if (ia9) {
-      const vals = [...ia9.porA.values()].map(x => x.y), infs = [...ia9.inf.values()];
-      const p0 = media(pers.map(p => p.tests.sin_limite.porA[ang[0]].prec)), pN = media(pers.map(p => p.tests.sin_limite.porA[ang[ang.length - 1]].prec));
-      d.push(`IA-9 acierta el <b>${pct(ia9.total, 1)}</b> en 3D y casi igual en todos los ángulos (de ${pct(Math.min(...vals))} a ${pct(Math.max(...vals))}), mientras que las personas bajan de ${pct(p0)} a ${pct(pN)}. ${infs.length ? `Su tiempo de cálculo es el mismo para cualquier giro (${num(Math.min(...infs), 2)}–${num(Math.max(...infs), 2)} ms): ` : ''}compara rasgos aprendidos de una vez, sin nada parecido a girar la figura (H6).`);
-      const iguales = pers.filter(p => p.tests.sin_limite.prec >= ia9.total - 1e-9).length;
-      d.push(`Solo ${iguales} de ${pers.length} personas igualan a IA-9 en 3D. Pero es un sistema especializado, entrenado con miles de pares, frente a personas que ven la tarea por primera vez y que además sabrían hacer otras mil cosas.`);
-    }
-    if (ia9_2) {
-      const p2 = A.incluidos.filter(p => p.tests.control_2d);
-      const mejores = p2.filter(p => p.tests.control_2d.prec > ia9_2.total).length;
-      d.push(`Entrenada solo con cubos, IA-9 baja al <b>${pct(ia9_2.total, 1)}</b> con figuras planas: la superan ${mejores} de ${p2.length} personas. No generaliza a un formato nuevo, y las personas sí, sin entrenamiento.${mix2 ? ` Entrenada con los dos formatos (IA-9mix) llega al ${pct(mix2.total, 1)}: el límite era el entrenamiento, no la tarea.` : ''}`);
-    }
-    if (!chat.length) d.push('Faltan los modelos generalistas por chat (H3–H5). Si quedan cerca del azar, como predice H3, tendremos los dos extremos: IA especializada por encima de las personas y generalista por debajo.');
-    else d.push(`Modelos por chat: ${chat.map(a => `${esc(a)} ${pct(ia[a].sin_limite && ia[a].sin_limite.total, 1)}`).join(', ')} en 3D.`);
-    return d;
-  }
-  function discusionDif(A) {
-    const d = [], { vars, corr, med } = A.dif;
-    const fmtD = (x) => med.escala === 'pct' ? signo(x, v => pp(v)) : med.escala === 'ms' ? signo(x, ms) : signo(x, v => num(v, 1) + ' ms/°');
-    for (const v of vars) {
-      if (!v.w || !esNum(v.w.m)) continue;
-      const extra = v.id === 'genero' ? ' En la literatura, la diferencia a favor de los hombres es de las más estables en rotación mental (Voyer et al., 1995); aquí la muestra es pequeña.'
-        : v.id === 'estrategia' ? ' Girar la figura entera es la estrategia «holística» que supone el modelo de rotación mental; comparar brazos sueltos es analítica, por partes.' : '';
-      d.push(`${esc(v.nombre)}: ${esc(v.w.a)} frente a ${esc(v.w.b)}, ${fmtD(v.w.m)} (${fp(v.w.p)}).${extra}`);
-    }
-    const vj = corr.find(c => c.nombre.startsWith('Videojuegos'));
-    if (vj && vj.r) d.push(`Videojuegos 3D y ${med.nombre.toLowerCase()}: ρ = ${num(vj.r.r, 2)} (${fp(vj.r.p)}). Jugar a videojuegos de acción mejora la rotación mental (Feng et al., 2007).`);
-    d.push(`Con ${A.incluidos.length} personas y grupos desiguales, son tendencias para comentar, no conclusiones: casi ninguna diferencia entre grupos tendría potencia suficiente.`);
-    return d;
   }
 
   /* =================== pintar =================== */
@@ -715,16 +626,20 @@
   });
 
   const SECCIONES = [['sec-resumen', 'Resumen'], ['sec-muestra', 'Muestra'], ['sec-h1', 'H1 · Ángulo'], ['sec-h7', 'H7 · 2D frente a 3D'],
-    ['sec-h2', 'H2 · Distracción'], ['sec-orden', 'Orden y práctica'], ['sec-ia', 'H3–H6 · Personas frente a IA'],
-    ['sec-dif', 'Diferencias individuales'], ['sec-part', 'Participantes']];
+    ['sec-h2', 'H2 · Distracción'], ['sec-orden', 'Orden'], ['sec-ia', 'H3–H6 · IA'], ['sec-dif', 'Diferencias individuales'], ['sec-part', 'Participantes']];
 
-  function seccion(id, titulo, pregunta, v, cuerpo) {
-    return `<div class="tarjeta ancha seccion" id="${id}"><header><h2>${titulo}</h2>${badge(v)}</header>${pregunta ? `<p class="pregunta">${pregunta}</p>` : ''}${cuerpo}</div>`;
+  function seccion(id, titulo, meta, v, cuerpo) {
+    return `<div class="tarjeta ancha seccion" id="${id}"><header><h2>${titulo}</h2>${badge(v)}</header>${meta ? `<p class="meta">${meta}</p>` : ''}${cuerpo}</div>`;
   }
   const rejilla = (...ids) => `<div class="rejilla-graficos">${ids.map(id => `<div class="grafico" id="${id}"></div>`).join('')}</div>`;
-  const cajas = (datos, discusion) => `<div class="claves"><div class="caja-datos"><h4>Datos clave</h4><ul>${datos.filter(Boolean).map(x => `<li>${x}</li>`).join('') || '<li>Sin datos suficientes.</li>'}</ul></div>` +
-    (discusion && discusion.length ? `<div class="caja-discusion"><h4>Para la discusión: posibles explicaciones</h4><ul>${discusion.map(x => `<li>${x}</li>`).join('')}</ul></div>` : '') + '</div>';
-  const baldosas = (lista) => `<div class="baldosas">${lista.map(([v, t]) => `<div class="baldosa"><div class="v">${v}</div><div class="t">${t}</div></div>`).join('')}</div>`;
+  // Cifras clave: [valor, qué es, estadístico (opcional)]
+  const cifras = (lista) => {
+    const l = lista.filter(Boolean);
+    return l.length ? `<div class="cifras">${l.map(([v, t, s]) => `<div class="cifra"><div class="v">${v}</div><div class="t">${t}</div>${s ? `<div class="s">${s}</div>` : ''}</div>`).join('')}</div>` : '';
+  };
+  const pS = (r) => r && esNum(r.p) ? fp(r.p) : '';
+  const tS = (r) => r && esNum(r.t) ? `t(${num(r.gl, r.gl % 1 ? 1 : 0)}) = ${num(r.t, 2)} · ${fp(r.p)}` : '';
+  const fS = (r) => r ? `F(${r.gl1}, ${r.gl2}) = ${num(r.F, 1)} · ${fp(r.p)} · η²p ${num(r.eta, 2)}` : '';
 
   function recalcular() {
     if (!filas.length) { $('secciones').innerHTML = ''; return; }
@@ -734,102 +649,104 @@
     dibujados.clear();
     const { h1, h2, h7, angulos } = A;
     const L = A.incluidos;
-    const aN = angulos[angulos.length - 1];
+    const a0 = angulos[0], aN = angulos[angulos.length - 1];
     const fmtGrado = (x) => x + '°';
+    const pctEje = { yMin: 0.4, yMax: 1, ticks: [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], formato: (y) => pct(y, 1), formatoEje: (y) => pct(y), referencia: { y: 0.5, texto: 'azar' } };
 
     $('nav-secciones').innerHTML = SECCIONES.map(([id, t]) => `<a href="#${id}">${t}</a>`).join('');
+    $('n-analizadas').textContent = `${L.length} personas analizadas`;
 
     // ---------- resumen ----------
-    const dur = mediana(A.muestra.duracion);
-    let html = seccion('sec-resumen', 'Resumen de las hipótesis', 'Veredictos automáticos con los datos y criterios actuales (contrastes con p < 0,05). Son un punto de partida para la discusión: revisadlos con los gráficos de cada apartado.', null,
-      baldosas([
-        [L.length, `personas analizadas (de ${A.conDatos} con datos)`],
-        [pct(media(L.map(p => p.tests.sin_limite && p.tests.sin_limite.prec)), 1), 'precisión media en el test normal'],
-        [h1.pend ? num(h1.pend.m, 1) : '—', 'ms más por cada grado de giro'],
+    const M = A.muestra, dur = mediana(M.duracion);
+    let html = seccion('sec-resumen', 'Resumen', 'Veredicto automático: contrastes con p < 0,05.', null,
+      cifras([
+        [L.length, `personas analizadas`, `de ${A.conDatos} con datos`],
+        [pct(media(L.map(p => p.tests.sin_limite && p.tests.sin_limite.prec)), 1), 'precisión en el test normal'],
+        [h1.pend ? num(h1.pend.m, 1) + ' ms/°' : '—', 'coste de cada grado de giro'],
         [h1.velocidad ? num(h1.velocidad, 0) + ' °/s' : '—', 'velocidad de giro mental'],
-        [esNum(dur) ? num(dur, 1) + ' min' : '—', 'duración mediana de la sesión'],
-        [A.ia.agentes.length, 'modelos de IA cargados']
+        [esNum(dur) ? num(dur, 1) + ' min' : '—', 'duración de la sesión', 'mediana'],
+        [A.ia.agentes.length, 'modelos de IA']
       ]) +
-      `<div class="tabla-scroll"><table class="tabla tabla-hip"><tr><th>Hipótesis</th><th>Qué esperábamos</th><th>Qué sale</th><th>Veredicto</th></tr>` +
-      H.map(x => `<tr><td><a href="#sec-${x.id}">${x.h}</a></td><td>${esc(x.esperado)}</td><td>${x.r}</td><td>${badge(x.v)}</td></tr>`).join('') + '</table></div>');
+      `<div class="tabla-scroll"><table class="tabla tabla-hip"><tr><th>Hipótesis</th><th>Resultado</th><th>Veredicto</th></tr>` +
+      H.map(x => `<tr><td><a href="#sec-${x.id}"><b>${x.h}</b> · ${esc(x.texto)}</a></td><td class="estad">${x.r}</td><td>${badge(x.v)}</td></tr>`).join('') + '</table></div>');
 
     // ---------- muestra ----------
-    const M = A.muestra;
-    const maxE = Math.max(1, ...M.embudo.map(e => e[1]));
-    const maxO = Math.max(1, ...M.ordenes.map(e => e[1]));
+    const maxE = Math.max(1, ...M.embudo.map(e => e[1])), maxO = Math.max(1, ...M.ordenes.map(e => e[1]));
     const excl = A.personas.filter(p => p.motivo);
-    const conteo = (f, orden) => { const m = new Map(); L.forEach(p => { const v = f(p); if (v) m.set(v, (m.get(v) || 0) + 1); }); return [...m.entries()].sort((a, b) => (orden ? orden.indexOf(a[0]) - orden.indexOf(b[0]) : b[1] - a[1])).map(([k, n]) => `${esc(k)} ${n}`).join(' · ') || '—'; };
-    html += seccion('sec-muestra', 'Muestra y calidad de los datos', 'Quién ha participado, a quién se ha excluido y por qué (criterios fijados antes de ver los resultados).', null,
-      `<div class="claves"><div><h4 style="margin:0 0 8px">Del total a la muestra analizada</h4><div class="barras-h">` +
+    const cuenta = (f) => L.filter(f).length;
+    html += seccion('sec-muestra', 'Muestra', '', null,
+      `<div class="dos-col"><div><h4>Del total a la muestra analizada</h4><div class="barras-h">` +
       M.embudo.map(([t, n]) => `<div>${esc(t)}</div><div class="pista"><div class="lleno" style="width:${100 * n / maxE}%"></div></div><div class="n">${n}</div>`).join('') +
-      `</div></div><div><h4 style="margin:0 0 8px">Orden de los tests (contrabalanceo)</h4><div class="barras-h">` +
-      M.ordenes.map(([o, n]) => `<div>${esc(MR.nombreOrden(o))}</div><div class="pista"><div class="lleno" style="width:${100 * n / maxO}%;background:var(--suave)"></div></div><div class="n">${n}</div>`).join('') + `</div></div></div>` +
-      cajas([
-        `Edad: mediana ${num(mediana(M.edad), 0)} años (de ${num(Math.min(...M.edad), 0)} a ${num(Math.max(...M.edad), 0)}).`,
-        `Género: ${conteo(p => ({ Hombre: 'hombres', Mujer: 'mujeres' })[p.perfil.genero] || (p.perfil.genero ? 'otro' : ''))}. Estudios: ${conteo(p => p.perfil.estudios)}.`,
-        `Dispositivo: ${conteo(p => ({ movil: 'móvil', ordenador: 'ordenador', tablet: 'tableta' })[p.dispositivo])}. Modalidad: ${conteo(p => p.modalidad)}.`,
-        esNum(dur) ? `Duración de la sesión: mediana ${num(dur, 1)} min.${M.descansos.length ? ` Descansos entre tests: mediana ${num(mediana(M.descansos), 1)} s.` : ''}` : '',
-        `Pares quitados por TR fuera de 0,3–20 s: ${M.fuera} de ${M.paresL} (${pct(M.fuera / Math.max(1, M.paresL), 1)}).`
-      ], [
-        M.rapidos ? `Hubo <b>${M.rapidos}</b> respuestas en menos de 0,3 s, imposibles para esta tarea (contando también a los excluidos): aciertan un ${pct(M.precRapidos)}, lo mismo que al azar. ${M.rapidosMovil / M.rapidos > 0.8 ? `El ${pct(M.rapidosMovil / M.rapidos)} son con el móvil: personas que tocaban sin mirar para acabar antes.` : 'Son personas que respondían sin mirar para acabar antes.'}` : '',
-        `Se excluye a ${excl.length} persona(s): ${[[1, 'no terminar el test normal'], [2, 'precisión baja'], [3, 'responder sin mirar']].map(([k, t]) => `${excl.filter(p => p.paso === k).length} por ${t}`).join(', ')}.`,
-        'Es una muestra de conveniencia (conocidos del grupo, online): no es representativa de la población, y hay más variedad de dispositivos y entornos que en un laboratorio.'
-      ].filter(Boolean)) +
-      (excl.length ? `<details class="tabla-datos" style="margin-top:10px"><summary>Ver a quién se excluye y por qué (${excl.length})</summary><ul style="font-size:.86rem">${excl.map(p => `<li>${esc(p.sujeto)}: ${esc(p.motivo)}</li>`).join('')}</ul></details>` : ''));
+      `</div></div><div><h4>Orden de los tests</h4><div class="barras-h">` +
+      M.ordenes.map(([o, n]) => `<div>${esc(MR.nombreOrden(o))}</div><div class="pista"><div class="lleno gris" style="width:${100 * n / maxO}%"></div></div><div class="n">${n}</div>`).join('') + `</div></div></div>` +
+      cifras([
+        [num(mediana(M.edad), 0) + ' años', 'edad', M.edad.length ? `de ${num(Math.min(...M.edad), 0)} a ${num(Math.max(...M.edad), 0)}` : ''],
+        [`${cuenta(p => p.perfil.genero === 'Mujer')} · ${cuenta(p => p.perfil.genero === 'Hombre')}`, 'mujeres · hombres'],
+        [`${cuenta(p => p.perfil.estudios === 'STEM')} · ${cuenta(p => p.perfil.estudios === 'No STEM')}`, 'STEM · no STEM'],
+        [`${cuenta(p => p.dispositivo === 'movil')} · ${cuenta(p => p.dispositivo === 'ordenador')}`, 'móvil · ordenador'],
+        M.descansos.length ? [num(mediana(M.descansos), 1) + ' s', 'descanso entre tests', 'mediana'] : null,
+        [M.rapidos, 'respuestas < 0,3 s', `aciertan ${pct(M.precRapidos)} · ${pct(M.rapidosMovil / Math.max(1, M.rapidos))} en móvil`],
+        [pct(M.fuera / Math.max(1, M.paresL), 1), 'pares quitados', `${M.fuera} de ${M.paresL} (TR fuera de 0,3–20 s)`]
+      ]) +
+      (excl.length ? `<details class="tabla-datos"><summary>Excluidos (${excl.length}): ${[[1, 'test normal sin terminar'], [2, 'precisión baja'], [3, 'sin mirar']].map(([k, t]) => `${excl.filter(p => p.paso === k).length} ${t}`).join(' · ')}</summary><ul class="lista-excl">${excl.map(p => `<li>${esc(p.sujeto)}: ${esc(p.motivo)}</li>`).join('')}</ul></details>` : ''));
 
     // ---------- H1 ----------
-    html += seccion('sec-h1', 'H1 · Efecto del ángulo de giro', `¿Tardan más las personas cuanto más girada está la figura? (test normal, ${h1.n} personas; aciertos en pares «igual» para el TR, como en Shepard y Metzler, 1971)`, vDe('H1'),
+    html += seccion('sec-h1', 'H1 · Efecto del ángulo de giro', `Test normal · ${h1.n} personas`, vDe('H1'),
       rejilla('g-h1-tr', 'g-h1-prec', 'g-h1-pend') +
-      cajas(h1.pend ? [
-        `TR por ángulo: ${angulos.map((a, i) => `${a}° ${seg(h1.curva[i])}`).join(' · ')}. ANOVA de medidas repetidas: ${fTexto(h1.anovaTr)}.`,
-        `Pendiente media <b>${num(h1.pend.m, 1)} ms/°</b> ± ${num(h1.pend.e, 1)} (IC 95 % ${num(h1.pend.m - h1.pend.ic, 1)} a ${num(h1.pend.m + h1.pend.ic, 1)}), ${tTexto(h1.pend)}; positiva en ${h1.positivas.filter(x => x > 0).length} de ${h1.positivas.length} personas.`,
-        `Ajuste lineal de las medias: R² = ${num(h1.r2, 3)}. Velocidad de giro ≈ ${num(h1.velocidad, 0)} °/s.`,
-        `Precisión por ángulo: ${angulos.map((a, i) => `${a}° ${pct(h1.curvaPrec[i])}`).join(' · ')}. ${fTexto(h1.anovaPrec)}.`,
-        h1.espejo ? `Pares espejo frente a iguales (TR de aciertos): ${signo(h1.espejo.m, ms)}, ${tTexto(h1.espejo)}.` : ''
-      ] : [], discusionH1(A)));
+      cifras(h1.pend ? [
+        [num(h1.pend.m, 1) + ' ms/°', 'pendiente media', `IC 95 % ${num(h1.pend.m - h1.pend.ic, 1)}–${num(h1.pend.m + h1.pend.ic, 1)} · ${tS(h1.pend)}`],
+        [`${h1.positivas.filter(x => x > 0).length} / ${h1.positivas.length}`, 'personas con pendiente positiva'],
+        ['R² ' + num(h1.r2, 3), 'ajuste lineal de las medias'],
+        [num(h1.velocidad, 0) + ' °/s', 'velocidad de giro'],
+        [`${seg(h1.curva[0])} → ${seg(h1.curva[h1.curva.length - 1])}`, `TR de ${a0}° a ${aN}°`, fS(h1.anovaTr)],
+        [`${pct(h1.curvaPrec[0])} → ${pct(h1.curvaPrec[h1.curvaPrec.length - 1])}`, `precisión de ${a0}° a ${aN}°`, fS(h1.anovaPrec)],
+        h1.espejo ? [signo(h1.espejo.m, ms), 'pares espejo frente a iguales', tS(h1.espejo)] : null
+      ] : []));
 
     // ---------- H7 ----------
-    html += seccion('sec-h7', 'H7 · Figuras planas (2D) frente a cubos (3D)', `¿La dificultad está en la tridimensionalidad o en el giro? Las mismas ${h7.n} personas con las dos versiones del test.`, vDe('H7'),
+    html += seccion('sec-h7', 'H7 · Figuras planas (2D) frente a cubos (3D)', `Mismas personas en los dos tests · ${h7.n}`, vDe('H7'),
       rejilla('g-h7-tr', 'g-h7-prec', 'g-h7-pend') +
-      cajas(h7.tr ? [
-        `TR mediano 2D − 3D: <b>${signo(h7.tr.m, ms)}</b> ± ${ms(h7.tr.e)}, ${tTexto(h7.tr)}.`,
-        `Pendiente: ${num(h7.pend2m, 1)} ms/° en 2D frente a ${num(h7.pend3, 1)} en 3D (${signo(h7.pend.m, x => num(x, 1))} ms/°), ${tTexto(h7.pend)}.`,
-        `Efecto del ángulo en 2D: pendiente > 0, ${tTexto(h7.pend2)}; ANOVA del TR en 2D: ${fTexto(h7.anova2)}.`,
-        `Precisión 2D − 3D: ${signo(h7.prec.m, x => pp(x))}, ${tTexto(h7.prec)}.`,
-        `Respuestas «igual» a pares espejo: ${pct(h7.fa2)} en 2D frente a ${pct(h7.fa3)} en 3D${h7.fa ? `, ${tTexto(h7.fa)}` : ''}.`
-      ] : [], discusionH7(A)));
+      cifras(h7.tr ? [
+        [signo(h7.tr.m, ms), 'TR 2D − 3D', tS(h7.tr)],
+        [`${num(h7.pend2m, 1)} / ${num(h7.pend3, 1)}`, 'pendiente 2D / 3D (ms/°)', tS(h7.pend)],
+        [num(h7.pend2.m, 1) + ' ms/°', 'efecto del ángulo en 2D', tS(h7.pend2)],
+        [signo(h7.prec.m, x => pp(x)), 'precisión 2D − 3D', tS(h7.prec)],
+        [`${pct(h7.fa2)} / ${pct(h7.fa3)}`, '«igual» a pares espejo, 2D / 3D', tS(h7.fa)]
+      ] : []));
 
     // ---------- H2 ----------
-    html += seccion('sec-h2', 'H2 · Efecto de la distracción', `¿Empeoran las personas con pitidos y formas de colores? Cada persona frente a sí misma (${h2.n} personas${A.o.sonido && h2.sinSonido ? `, sin las ${h2.sinSonido} que no oyeron los pitidos` : ''}).`, vDe('H2'),
+    html += seccion('sec-h2', 'H2 · Efecto de la distracción', `Mismas personas en los dos tests · ${h2.n}${A.o.sonido && h2.sinSonido ? ` (sin ${h2.sinSonido} que no oyeron los pitidos)` : ''}`, vDe('H2'),
       rejilla('g-h2-tr', 'g-h2-prec', 'g-h2-sat', 'g-h2-orden') +
-      cajas(h2.tr ? [
-        `Precisión con distracción − normal: <b>${signo(h2.prec.m, x => pp(x))}</b> ± ${pp(h2.prec.e)}, ${tTexto(h2.prec)}.`,
-        `TR mediano: <b>${signo(h2.tr.m, ms)}</b> ± ${ms(h2.tr.e)}, ${tTexto(h2.tr)}.`,
-        `Pendiente: ${signo(h2.pend && h2.pend.m, x => num(x, 1) + ' ms/°')}, ${tTexto(h2.pend)}.`,
-        `Interacción condición × ángulo (TR): ${fTexto(h2.inter)}. Cambio de precisión por ángulo: ${h2.porA.map(x => `${x.a}° ${signo(x.d, v => pp(v, 0))}`).join(' · ')}.`,
-        h2.ordenW ? `Según el orden: ${signo(h2.efNormalAntes, x => pp(x))} si el normal fue antes (n = ${h2.normalAntes.length}) y ${signo(h2.efDistAntes, x => pp(x))} si la distracción fue antes (n = ${h2.distAntes.length}); interacción condición × orden: t de Welch ${est(`${num(h2.ordenW.t, 2)}, ${fp(h2.ordenW.p)}`)}.` : ''
-      ] : [], discusionH2(A)));
+      cifras(h2.tr ? [
+        [signo(h2.prec.m, x => pp(x)), 'precisión: distracción − normal', tS(h2.prec)],
+        [signo(h2.tr.m, ms), 'TR: distracción − normal', tS(h2.tr)],
+        h2.pend ? [signo(h2.pend.m, x => num(x, 1) + ' ms/°'), 'pendiente: distracción − normal', tS(h2.pend)] : null,
+        h2.inter ? [pS(h2.inter), 'interacción con el ángulo (TR)', fS(h2.inter)] : null,
+        h2.ordenW ? [`${signo(h2.efNormalAntes, x => pp(x, 0))} / ${signo(h2.efDistAntes, x => pp(x, 0))}`, 'efecto si el normal fue antes / después', `Welch ${pS(h2.ordenW)}`] : null
+      ] : []));
 
     // ---------- orden ----------
-    html += seccion('sec-orden', 'Orden de los tests: práctica y cansancio', 'Cada test según la posición en que se hizo (personas distintas en cada posición; el orden se asignó al azar o por turnos).', vDe('Orden'),
+    html += seccion('sec-orden', 'Orden de los tests', 'Personas distintas en cada posición', vDe('Orden'),
       rejilla('g-orden-prec', 'g-orden-tr') +
-      cajas(A.orden.filter(x => x.n).map(x => `${NOMBRE[x.c]}: ${x.porPos.map(q => `${q.k}.º ${pct(q.prec)} (n = ${q.n})`).join(' · ')}. Después − en 1.er lugar: ${x.wPrec ? `${signo(x.wPrec.m, v => pp(v))}, ${fp(x.wPrec.p)}` : '—'}; TR ${x.wTr ? `${signo(x.wTr.m, ms)}, ${fp(x.wTr.p)}` : '—'}.`), discusionOrden(A)));
+      cifras(A.orden.filter(x => x.wPrec).map(x => [signo(x.wPrec.m, v => pp(v)), `${NOMBRE[x.c]}: después − en 1.er lugar`, `Welch ${pS(x.wPrec)}${x.wTr ? ` · TR ${signo(x.wTr.m, ms)}` : ''}`])));
 
     // ---------- IA ----------
-    const tablaIA = A.ia.agentes.length ? '' : '<p class="vacio">No hay resultados de IA cargados: añade ia9_3d.csv, ia9_2d.csv, ia9mix_… (modelo_siames) o resultados_chat.csv.</p>';
-    html += seccion('sec-ia', 'H3–H6 · Personas frente a IA', `Las mismas figuras para personas e IA. ${A.o.primero ? 'Personas: solo el test que hicieron en primer lugar, sin práctica previa (como la IA).' : 'Personas: todos los incluidos (activa «IA: solo el test que hicieron primero» para compararlas sin práctica previa).'}`, null,
-      tablaIA + rejilla('g-ia-3d', 'g-ia-2d', 'g-ia-dist', 'g-ia-coste') +
-      cajas(A.ia.agentes.map(ag => {
-        const x = A.ia.ia[ag];
-        return `${esc(ag)}: ${x.sin_limite ? `3D ${pct(x.sin_limite.total, 1)}` : ''}${x.sin_limite && x.control_2d ? ' · ' : ''}${x.control_2d ? `2D ${pct(x.control_2d.total, 1)}` : ''} (${(x.sin_limite || x.control_2d).reps} repeticiones o semillas).`;
-      }).concat([`Personas: 3D ${pct(media(A.ia.humanosIA('sin_limite').map(p => p.tests.sin_limite.prec)), 1)} (n = ${A.ia.humanosIA('sin_limite').length}) · 2D ${pct(media(A.ia.humanosIA('control_2d').map(p => p.tests.control_2d.prec)), 1)} (n = ${A.ia.humanosIA('control_2d').length}).`]),
-      discusionIA(A)));
+    const hs3 = A.ia.humanosIA('sin_limite'), hs2 = A.ia.humanosIA('control_2d');
+    const ia9 = A.ia.ia['IA-9'] && A.ia.ia['IA-9'].sin_limite;
+    html += seccion('sec-ia', 'H3–H6 · Personas frente a IA', `Personas: ${A.o.primero ? 'solo el test que hicieron en primer lugar' : 'todos los incluidos'} · mismas figuras para personas e IA`, null,
+      (A.ia.agentes.length ? '' : '<p class="vacio">Sin resultados de IA: añade ia9_3d.csv, ia9_2d.csv, ia9mix_… o resultados_chat.csv.</p>') +
+      rejilla('g-ia-3d', 'g-ia-2d', 'g-ia-dist', 'g-ia-coste') +
+      cifras([
+        [`${pct(media(hs3.map(p => p.tests.sin_limite.prec)), 1)} / ${pct(media(hs2.map(p => p.tests.control_2d.prec)), 1)}`, 'personas, 3D / 2D', `n = ${hs3.length} / ${hs2.length}`]
+      ].concat(A.ia.agentes.map(ag => { const x = A.ia.ia[ag]; return [`${x.sin_limite ? pct(x.sin_limite.total, 1) : '—'} / ${x.control_2d ? pct(x.control_2d.total, 1) : '—'}`, `${esc(ag)}, 3D / 2D`, `${(x.sin_limite || x.control_2d).reps} semillas o repeticiones`]; }))
+        .concat(ia9 ? [[`${hs3.filter(p => p.tests.sin_limite.prec >= ia9.total - 1e-9).length} / ${hs3.length}`, 'personas que igualan a IA-9 en 3D']] : [])));
 
     // ---------- diferencias individuales ----------
-    html += seccion('sec-dif', 'Diferencias individuales y cuestionario', 'Exploratorio: ¿quién lo hace mejor? Datos generales y cuestionario final (hoja «sesiones»).', null,
+    html += seccion('sec-dif', 'Diferencias individuales', `Exploratorio · ${L.length} personas · grupos de menos de 3 personas ocultos`, null,
       `<label class="medida-sel">Medida <select id="sel-medida">${Object.entries(A.dif.medidas).map(([k, m]) => `<option value="${k}" ${k === medidaDif ? 'selected' : ''}>${m.nombre}</option>`).join('')}</select></label>` +
       rejilla(...A.dif.vars.map(v => 'g-dif-' + v.id), 'g-dif-corr') +
-      cajas(A.dif.corr.filter(c => c.r).map(c => `${c.nombre}: ρ de Spearman = ${num(c.r.r, 2)} (${fp(c.r.p)}, n = ${c.r.n}).`), discusionDif(A)));
+      `<div class="tabla-scroll"><table class="tabla tabla-corr"><tr><th>Correlación con la medida</th><th>ρ de Spearman</th><th>p</th><th>n</th></tr>` +
+      A.dif.corr.filter(c => c.r).map(c => `<tr><td>${c.nombre}</td><td>${num(c.r.r, 2)}</td><td>${fp(c.r.p).replace('p = ', '').replace('p < ', '< ')}</td><td>${c.r.n}</td></tr>`).join('') + '</table></div>');
 
     // ---------- participantes ----------
     html += seccion('sec-part', 'Participantes', '', null,
@@ -844,38 +761,36 @@
     // ---------- gráficos ----------
     const n1 = L.filter(p => p.tests.sin_limite);
     lineas($('g-h1-tr'), {
-      titulo: 'Tiempo de respuesta por ángulo', sub: `Test normal · mediana de los aciertos de cada persona; media ± EE (n = ${n1.length})`,
+      titulo: 'Tiempo de respuesta por ángulo', sub: 'Mediana de los aciertos · media ± EE',
       xs: angulos, xFormato: fmtGrado, xTitulo: 'Ángulo de giro', yMin: 0, formato: ms,
       series: [{ nombre: 'Pares «igual»', color: COLOR.sin_limite, puntos: serieA(n1, 'sin_limite', 'trI', angulos) },
                { nombre: 'Pares espejo', color: COLOR.sin_limite, discontinua: true, puntos: serieA(n1, 'sin_limite', 'trE', angulos) }]
     });
-    lineas($('g-h1-prec'), {
-      titulo: 'Precisión por ángulo', sub: `Test normal · media ± EE (n = ${n1.length})`, xs: angulos, xFormato: fmtGrado, xTitulo: 'Ángulo de giro',
-      yMin: 0.4, yMax: 1, ticks: [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], formato: (y) => pct(y), referencia: { y: 0.5, texto: 'azar' },
+    lineas($('g-h1-prec'), Object.assign({
+      titulo: 'Precisión por ángulo', sub: 'Media ± EE', xs: angulos, xFormato: fmtGrado, xTitulo: 'Ángulo de giro',
       series: [{ nombre: 'Pares «igual»', color: COLOR.sin_limite, puntos: serieA(n1, 'sin_limite', 'precI', angulos) },
                { nombre: 'Pares espejo', color: COLOR.sin_limite, discontinua: true, puntos: serieA(n1, 'sin_limite', 'precE', angulos) }]
-    });
+    }, pctEje));
     tira($('g-h1-pend'), {
-      titulo: 'Pendiente de cada persona (ms por grado)', sub: 'Un punto por persona; barra negra: media e IC 95 %. Por encima de 0 = tarda más cuanto más girada está la figura.',
+      titulo: 'Pendiente de cada persona', sub: 'Un punto por persona · media e IC 95 %',
       formato: (y) => num(y, 1) + ' ms/°', formatoEje: (y) => num(y, 0) + ' ms/°', referencias: [{ y: 0, texto: 'sin efecto del ángulo' }],
       grupos: TESTS.map(c => ({ nombre: NOMBRE[c], color: COLOR[c], valores: L.filter(p => p.tests[c] && esNum(p.tests[c].pend)).map(p => ({ v: p.tests[c].pend, etiqueta: p.sujeto })) }))
     });
 
     const p2 = h7.lista;
     lineas($('g-h7-tr'), {
-      titulo: 'TR por ángulo: cubos frente a figuras planas', sub: `Mismas personas (n = ${p2.length}) · pares «igual», mediana de los aciertos; media ± EE`,
+      titulo: 'TR por ángulo', sub: 'Pares «igual», mediana de los aciertos · media ± EE',
       xs: angulos, xFormato: fmtGrado, xTitulo: 'Ángulo de giro', yMin: 0, formato: ms,
       series: [{ nombre: 'Cubos (3D)', color: COLOR.sin_limite, puntos: serieA(p2, 'sin_limite', 'trI', angulos) },
                { nombre: 'Planas (2D)', color: COLOR.control_2d, puntos: serieA(p2, 'control_2d', 'trI', angulos) }]
     });
-    lineas($('g-h7-prec'), {
-      titulo: 'Precisión por ángulo: cubos frente a figuras planas', sub: `Mismas personas (n = ${p2.length}) · todos los pares; media ± EE`,
-      xs: angulos, xFormato: fmtGrado, xTitulo: 'Ángulo de giro', yMin: 0.4, yMax: 1, ticks: [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], formato: (y) => pct(y), referencia: { y: 0.5, texto: 'azar' },
+    lineas($('g-h7-prec'), Object.assign({
+      titulo: 'Precisión por ángulo', sub: 'Media ± EE', xs: angulos, xFormato: fmtGrado, xTitulo: 'Ángulo de giro',
       series: [{ nombre: 'Cubos (3D)', color: COLOR.sin_limite, puntos: serieA(p2, 'sin_limite', 'prec', angulos) },
                { nombre: 'Planas (2D)', color: COLOR.control_2d, puntos: serieA(p2, 'control_2d', 'prec', angulos) }]
-    });
+    }, pctEje));
     dispersion($('g-h7-pend'), {
-      titulo: 'Pendiente en 3D frente a 2D, persona a persona', sub: 'Por debajo de la diagonal: gira más deprisa las figuras planas que los cubos.',
+      titulo: 'Pendiente 3D frente a 2D', sub: 'Un punto por persona',
       xTitulo: 'Pendiente en 3D (ms/°)', yTitulo: 'Pendiente en 2D (ms/°)', identidad: true, color: COLOR.control_2d,
       fx: (x) => num(x, 1) + ' ms/°', fy: (y) => num(y, 1) + ' ms/°', fxEje: (x) => num(x, 0), fyEje: (y) => num(y, 0),
       puntos: p2.filter(p => esNum(p.tests.sin_limite.pend) && esNum(p.tests.control_2d.pend)).map(p => ({ x: p.tests.sin_limite.pend, y: p.tests.control_2d.pend, etiqueta: p.sujeto }))
@@ -883,20 +798,19 @@
 
     const pD = h2.lista;
     lineas($('g-h2-tr'), {
-      titulo: 'TR por ángulo: normal frente a distracción', sub: `Mismas personas (n = ${pD.length}) · pares «igual», mediana de los aciertos; media ± EE`,
+      titulo: 'TR por ángulo', sub: 'Pares «igual», mediana de los aciertos · media ± EE',
       xs: angulos, xFormato: fmtGrado, xTitulo: 'Ángulo de giro', yMin: 0, formato: ms,
       series: [{ nombre: 'Normal', color: COLOR.sin_limite, puntos: serieA(pD, 'sin_limite', 'trI', angulos) },
                { nombre: 'Con distracción', color: COLOR.distraccion, puntos: serieA(pD, 'distraccion', 'trI', angulos) }]
     });
-    lineas($('g-h2-prec'), {
-      titulo: 'Precisión por ángulo: normal frente a distracción', sub: `Mismas personas (n = ${pD.length}) · todos los pares; media ± EE`,
-      xs: angulos, xFormato: fmtGrado, xTitulo: 'Ángulo de giro', yMin: 0.4, yMax: 1, ticks: [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], formato: (y) => pct(y), referencia: { y: 0.5, texto: 'azar' },
+    lineas($('g-h2-prec'), Object.assign({
+      titulo: 'Precisión por ángulo', sub: 'Media ± EE', xs: angulos, xFormato: fmtGrado, xTitulo: 'Ángulo de giro',
       series: [{ nombre: 'Normal', color: COLOR.sin_limite, puntos: serieA(pD, 'sin_limite', 'prec', angulos) },
                { nombre: 'Con distracción', color: COLOR.distraccion, puntos: serieA(pD, 'distraccion', 'prec', angulos) }]
-    });
+    }, pctEje));
     dispersion($('g-h2-sat'), {
-      titulo: '¿Más rápido o más preciso? Cambio de cada persona con distracción', sub: 'Abajo a la izquierda: responde más rápido y acierta menos (intercambio velocidad-precisión).',
-      xTitulo: 'Cambio de TR (distracción − normal)', yTitulo: 'Cambio de precisión', ceros: true, color: COLOR.distraccion,
+      titulo: 'Cambio de cada persona con distracción', sub: 'Un punto por persona',
+      xTitulo: 'Cambio de TR', yTitulo: 'Cambio de precisión', ceros: true, color: COLOR.distraccion,
       fx: (x) => signo(x, ms), fy: (y) => signo(y, v => pp(v)), fyEje: (y) => signo(y, v => pp(v, 0)),
       notas: [{ donde: 'abajo-izq', texto: 'más rápido, menos preciso' }, { donde: 'arriba-der', texto: 'más lento, más preciso' }],
       puntos: pD.filter(p => esNum(p.tests.distraccion.tr) && esNum(p.tests.sin_limite.tr)).map(p => ({ x: p.tests.distraccion.tr - p.tests.sin_limite.tr, y: p.tests.distraccion.prec - p.tests.sin_limite.prec, etiqueta: p.sujeto }))
@@ -906,20 +820,20 @@
       { y: media(lista.map(p => p.tests.distraccion.prec)), ee: eeDe(lista.map(p => p.tests.distraccion.prec)), n: lista.length }];
     const gN = grupoOrden(h2.normalAntes || []), gD = grupoOrden(h2.distAntes || []);
     barras($('g-h2-orden'), {
-      titulo: 'La distracción según el orden de los tests', sub: 'Precisión media ± EE de cada test, según cuál se hizo antes.',
-      categorias: [`El normal antes\n(n = ${(h2.normalAntes || []).length})`, `La distracción antes\n(n = ${(h2.distAntes || []).length})`],
-      yMax: 1, ticks: [0, 0.25, 0.5, 0.75, 1], formato: (y) => pct(y), referencia: { y: 0.5, texto: 'azar' },
+      titulo: 'Según el orden de los tests', sub: 'Precisión · media ± EE',
+      categorias: [`Normal antes\n(n = ${(h2.normalAntes || []).length})`, `Distracción antes\n(n = ${(h2.distAntes || []).length})`],
+      yMax: 1, ticks: [0, 0.25, 0.5, 0.75, 1], formato: (y) => pct(y, 1), formatoEje: (y) => pct(y), referencia: { y: 0.5, texto: 'azar' },
       series: [{ nombre: 'Test normal', color: COLOR.sin_limite, valores: [gN[0], gD[0]] }, { nombre: 'Test con distracción', color: COLOR.distraccion, valores: [gN[1], gD[1]] }]
     });
 
     const posCat = ['1.er lugar', '2.º lugar', '3.er lugar'];
     barras($('g-orden-prec'), {
-      titulo: 'Precisión según la posición del test', sub: 'Media ± EE; personas distintas en cada posición.', categorias: posCat,
-      yMax: 1, ticks: [0, 0.25, 0.5, 0.75, 1], formato: (y) => pct(y), referencia: { y: 0.5, texto: 'azar' },
+      titulo: 'Precisión según la posición', sub: 'Media ± EE', categorias: posCat,
+      yMax: 1, ticks: [0, 0.25, 0.5, 0.75, 1], formato: (y) => pct(y, 1), formatoEje: (y) => pct(y), referencia: { y: 0.5, texto: 'azar' },
       series: A.orden.filter(x => x.n).map(x => ({ nombre: NOMBRE[x.c], color: COLOR[x.c], valores: x.porPos.map(q => q.n ? { y: q.prec, ee: q.precE, n: q.n } : null) }))
     });
     barras($('g-orden-tr'), {
-      titulo: 'TR según la posición del test', sub: 'Mediana de los aciertos de cada persona; media ± EE.', categorias: posCat, formato: ms,
+      titulo: 'TR según la posición', sub: 'Mediana de los aciertos · media ± EE', categorias: posCat, formato: ms,
       series: A.orden.filter(x => x.n).map(x => ({ nombre: NOMBRE[x.c], color: COLOR[x.c], valores: x.porPos.map(q => q.n ? { y: q.tr, ee: q.trE, n: q.n } : null) }))
     });
 
@@ -929,27 +843,21 @@
       A.ia.agentes.forEach(ag => { if (A.ia.ia[ag][c]) out.push({ nombre: ag, color: A.ia.colorAgente[ag], puntos: A.ia.ia[ag][c].porA }); });
       return out;
     };
-    lineas($('g-ia-3d'), {
-      titulo: 'Precisión por ángulo · figuras 3D', sub: 'Personas: media ± EE. IA: media de semillas o repeticiones.', xs: angulos, xFormato: fmtGrado, xTitulo: 'Ángulo de giro',
-      yMin: 0.4, yMax: 1, ticks: [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], formato: (y) => pct(y), referencia: { y: 0.5, texto: 'azar' }, series: seriesIA('sin_limite')
-    });
-    lineas($('g-ia-2d'), {
-      titulo: 'Precisión por ángulo · figuras 2D', sub: 'Control 2D: los mismos 48 pares para personas e IA.', xs: angulos, xFormato: fmtGrado, xTitulo: 'Ángulo de giro',
-      yMin: 0.4, yMax: 1, ticks: [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], formato: (y) => pct(y), referencia: { y: 0.5, texto: 'azar' }, series: seriesIA('control_2d')
-    });
+    lineas($('g-ia-3d'), Object.assign({ titulo: 'Precisión por ángulo · 3D', sub: 'Media ± EE', xs: angulos, xFormato: fmtGrado, xTitulo: 'Ángulo de giro', series: seriesIA('sin_limite') }, pctEje));
+    lineas($('g-ia-2d'), Object.assign({ titulo: 'Precisión por ángulo · 2D', sub: 'Media ± EE', xs: angulos, xFormato: fmtGrado, xTitulo: 'Ángulo de giro', series: seriesIA('control_2d') }, pctEje));
     tira($('g-ia-dist'), {
-      titulo: '¿Dónde queda cada IA entre las personas?', sub: 'Precisión de cada persona (puntos) y de cada IA (líneas). Pasa el ratón para ver el código.',
+      titulo: 'Cada IA entre las personas', sub: 'Precisión · un punto por persona; líneas: IA',
       formato: (y) => pct(y, 1), formatoEje: (y) => pct(y), yMin: 0.4, yMax: 1,
       referencias: [{ y: 0.5, texto: 'azar' }].concat(A.ia.agentes.flatMap(ag => ['sin_limite', 'control_2d'].filter(c => A.ia.ia[ag][c]).map(c => ({ y: A.ia.ia[ag][c].total, texto: ag, color: A.ia.colorAgente[ag], grupo: c === 'sin_limite' ? 0 : 1 })))),
-      grupos: ['sin_limite', 'control_2d'].map(c => ({ nombre: c === 'sin_limite' ? 'Figuras 3D (test normal)' : 'Figuras 2D (control)', color: COLOR_PERSONAS, valores: A.ia.humanosIA(c).map(p => ({ v: p.tests[c].prec, etiqueta: p.sujeto })) }))
+      grupos: ['sin_limite', 'control_2d'].map(c => ({ nombre: c === 'sin_limite' ? 'Figuras 3D' : 'Figuras 2D', color: COLOR_PERSONAS, valores: A.ia.humanosIA(c).map(p => ({ v: p.tests[c].prec, etiqueta: p.sujeto })) }))
     });
-    const coste = [{ nombre: `Personas: TR (n = ${n1.length})`, color: COLOR_PERSONAS, puntos: serieA(n1, 'sin_limite', 'trI', angulos, (v, p) => esNum(v) && esNum(p.tests.sin_limite.porA[angulos[0]].trI) ? v / p.tests.sin_limite.porA[angulos[0]].trI : null) }];
+    const coste = [{ nombre: `Personas: TR (n = ${n1.length})`, color: COLOR_PERSONAS, puntos: serieA(n1, 'sin_limite', 'trI', angulos, (v, p) => esNum(v) && esNum(p.tests.sin_limite.porA[a0].trI) ? v / p.tests.sin_limite.porA[a0].trI : null) }];
     A.ia.agentes.forEach(ag => {
       const x = A.ia.ia[ag].sin_limite;
-      if (x && x.inf.size && esNum(x.inf.get(angulos[0]))) coste.push({ nombre: `${ag}: tiempo de cálculo`, color: A.ia.colorAgente[ag], puntos: new Map([...x.inf.entries()].map(([a, t]) => [a, { y: t / x.inf.get(angulos[0]), ee: null, n: x.reps }])) });
+      if (x && x.inf.size && esNum(x.inf.get(a0))) coste.push({ nombre: `${ag}: tiempo de cálculo`, color: A.ia.colorAgente[ag], puntos: new Map([...x.inf.entries()].map(([a, t]) => [a, { y: t / x.inf.get(a0), ee: null, n: x.reps }])) });
     });
     lineas($('g-ia-coste'), {
-      titulo: 'Coste de procesamiento según el ángulo (3D)', sub: 'Relativo a 0° (1 = igual que sin giro). Personas: TR; IA: tiempo de cálculo por par.',
+      titulo: 'Coste según el ángulo · 3D', sub: `Relativo a ${a0}°`,
       xs: angulos, xFormato: fmtGrado, xTitulo: 'Ángulo de giro', yMin: 0, formato: (y) => '×' + num(y, 2), formatoEje: (y) => '×' + num(y, 0), series: coste
     });
 
@@ -957,15 +865,15 @@
     const escY = med.escala === 'pct' ? { yMax: 1, ticks: [0, 0.25, 0.5, 0.75, 1] } : {};
     A.dif.vars.forEach(v => {
       barras($('g-dif-' + v.id), Object.assign({
-        titulo: v.nombre, sub: `${med.nombre} · media ± EE${v.w && esNum(v.w.p) ? ` · ${v.w.a} frente a ${v.w.b}: ${fp(v.w.p)}` : ''}`,
+        titulo: v.nombre, sub: `Media ± EE${v.w && esNum(v.w.p) ? ` · ${v.w.a} frente a ${v.w.b}: ${fp(v.w.p)}` : ''}`,
         categorias: v.grupos.map(g => `${g.nombre}\n(n = ${g.n})`), formato: med.fmt, formatoEje: med.eje,
         series: [{ nombre: med.nombre, color: COLOR_PERSONAS, valores: v.grupos.map(g => ({ y: g.y, ee: g.ee, n: g.n })) }]
       }, escY));
     });
     const edad = A.dif.corr[0];
     dispersion($('g-dif-corr'), {
-      titulo: 'Edad', sub: `${med.nombre}${edad.r ? ` · ρ = ${num(edad.r.r, 2)} (${fp(edad.r.p)})` : ''}`, xTitulo: 'Edad (años)', yTitulo: med.nombre,
-      color: COLOR_PERSONAS, recta: true, fx: (x) => num(x, 0) + ' años', fy: med.fmt,
+      titulo: 'Edad', sub: edad.r ? `ρ = ${num(edad.r.r, 2)} · ${fp(edad.r.p)}` : 'Un punto por persona', xTitulo: 'Edad (años)', yTitulo: med.nombre,
+      color: COLOR_PERSONAS, recta: true, fx: (x) => num(x, 0) + ' años', fy: med.fmt, fxEje: (x) => num(x, 0), fyEje: med.eje,
       puntos: L.map(p => ({ x: edad.f(p), y: med.f(p), etiqueta: p.sujeto })).filter(q => esNum(q.x) && esNum(q.y) && q.x < 95)
     });
   }
