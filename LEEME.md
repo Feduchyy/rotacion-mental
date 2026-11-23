@@ -76,23 +76,25 @@ Puesta en marcha (hoja de Google, publicación gratuita en GitHub Pages, mensaje
 
 ## 2 ter. Panel de resultados
 
-`panel.html`: arrastra los CSV (o pulsa *Añadir los datos guardados en este navegador*). Muestra:
+**Para abrirlo con todos los datos del proyecto:** doble clic en `abrir_panel.bat`, o `python servir.py --panel`. Se abre `http://localhost:8000/panel.html?proyecto=1`, que carga sola la carpeta `muestras/` (hojas `ensayos` y `sesiones`) y los resultados de la IA (`modelo_siames/resultados*` y `test_chat_ia/resultados_chat.csv`). Esos datos solo se sirven a este mismo ordenador. También se pueden arrastrar los CSV al panel, o abrirlo publicado en GitHub Pages y arrastrarlos allí (los datos no se suben a ningún sitio).
 
-- participantes por modalidad, excluidos, con los tres tests y cuántos empezaron por cada test;
-- en el test normal (Estudio 1), la precisión y el TR por ángulo y tipo (media de participantes ± error estándar) y la pendiente media;
-- **control 2D frente a 3D en las mismas personas**: precisión y TR por ángulo, y diferencias apareadas de precisión, TR y pendiente (t de Student), para todos y según cuál de los dos tests hizo antes;
-- personas frente a IA (IA-9, IA-9mix y modelos de chat) en 3D y en 2D;
-- en el Estudio 2, la diferencia apareada entre el test con distracción y el normal (precisión, TR y pendiente), para todos y según cuál de los dos tests hizo antes;
-- **el efecto del orden (práctica)**: cada test según la posición en que se hizo (1.º, 2.º o 3.º), y el 1.º frente a después (t de Welch).
+Está organizado por hipótesis, con una barra de navegación:
 
-Filtros:
-- excluir los datos de prueba;
-- elegir la modalidad;
-- excluir a quien acierte menos del 60 % en el test normal;
-- quedarse con los TR entre 300 ms y 20 s;
-- **test normal y 2D solo de quien los hizo en primer lugar** (sin práctica previa, como la IA), como comprobación de la comparación con la IA.
+- **Resumen**: tabla de H1–H7 con lo esperado, lo que sale y un veredicto automático (p < 0,05), y cifras clave.
+- **Muestra**: del total a la muestra analizada (exclusiones paso a paso), reparto de los 6 órdenes, perfil (edad, género, estudios, dispositivo), duración, descansos y calidad de los datos (respuestas imposibles de < 0,3 s).
+- **H1 · Ángulo**: TR y precisión por ángulo (pares iguales y espejo), pendiente de cada persona en los tres tests, ANOVA de medidas repetidas, t de las pendientes, R² del ajuste lineal y velocidad de giro.
+- **H7 · 2D frente a 3D**: las mismas personas con las dos versiones (TR, precisión, pendiente persona a persona, respuestas «igual» a pares espejo).
+- **H2 · Distracción**: normal frente a distracción por ángulo, intercambio velocidad-precisión persona a persona y efecto según el orden.
+- **Orden y práctica**: precisión y TR según la posición del test.
+- **H3–H6 · Personas frente a IA**: precisión por ángulo en 3D y 2D, dónde queda cada IA entre las personas y coste de procesamiento relativo a 0° (TR humano frente a tiempo de cálculo de la red).
+- **Diferencias individuales**: género, estudios, videojuegos, estrategia, dispositivo y correlaciones (edad, dificultad, concentración, cansancio), con la medida que se elija. Los grupos de menos de 3 personas no se muestran.
+- **Participantes**: tabla con el estado de cada persona y el motivo de exclusión.
 
-*Añadir datos simulados* carga 24 personas ficticias, marcadas como tales, solo para enseñar cómo se verá.
+Cada apartado tiene **datos clave** (estadísticos) y **posibles explicaciones para la discusión**, generadas con los datos cargados. Cada gráfico tiene **«Ver tabla»** y un botón **PNG** para descargarlo (para la memoria). Con Ctrl+P se imprime sin los controles.
+
+Criterios (arriba): quitar los datos de prueba, modalidad, exigir el test normal completo, precisión mínima en el test normal (60 %), quitar a quien respondía sin mirar (TR mediano < 300 ms), quitar pares de < 0,3 s o > 20 s, quitar de la distracción a quien no oyó los pitidos, comprobación sin los tests que no superan el azar y comparación con la IA solo con el test que cada persona hizo primero.
+
+*Añadir datos simulados* carga 36 personas ficticias, marcadas como tales, solo para enseñar cómo se verá. El panel anterior está guardado en `C:\datos_rotacion\copias_panel\`.
 
 ## 3. Condiciones predefinidas
 

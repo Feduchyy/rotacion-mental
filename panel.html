@@ -15,109 +15,140 @@
       --text-muted: #898781;
       --grid: #e1e0d9;
       --axis: #c3c2b7;
+      --bien: #0d7a3e; --bien-fondo: #e3f4ea;
+      --medio: #8a5a00; --medio-fondo: #fdf1d8;
+      --mal: #b42318; --mal-fondo: #fde8e6;
+      --neutro: #52514e; --neutro-fondo: #efeeea;
     }
-    .zona-carga { border: 2px dashed var(--borde); border-radius: 12px; padding: 22px; text-align: center; color: var(--suave); background: #fafcfb; cursor: pointer; }
+    .panel-ancho { max-width: 1240px; margin: 0 auto; }
+    .zona-carga { display: block; border: 2px dashed var(--borde); border-radius: 12px; padding: 20px; text-align: center; color: var(--suave); background: #fafcfb; cursor: pointer; }
     .zona-carga.encima { border-color: var(--acento); background: #eef7f6; }
     .archivos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-    .filtros { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
-    .filtros label { flex-direction: row; align-items: center; gap: 8px; font-weight: 500; }
-    .filtros input[type=number] { width: 70px; padding: 5px 8px; }
-    .filtros select { padding: 5px 8px; }
-    .baldosas { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 4px 0 4px; }
-    .baldosa { background: #fafcfb; border: 1px solid var(--borde); border-radius: 12px; padding: 12px 14px; }
-    .baldosa .v { font-size: 1.7rem; font-weight: 650; }
-    .baldosa .t { font-size: .82rem; color: var(--suave); }
-    .rejilla-graficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 18px; }
-    .grafico { background: var(--surface-1); border: 1px solid var(--borde); border-radius: 12px; padding: 14px 16px 8px; }
-    .grafico h3 { font-size: 1rem; margin: 0; }
-    .grafico .sub { font-size: .82rem; color: var(--text-secondary); margin: 2px 0 8px; }
-    .grafico svg { width: 100%; height: auto; display: block; overflow: visible; }
-    .grafico svg text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; }
-    .leyenda-viz { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .82rem; color: var(--text-secondary); margin: 4px 0 2px; }
-    .leyenda-viz span { display: inline-flex; align-items: center; gap: 6px; }
-    .leyenda-viz i { display: inline-block; width: 18px; height: 2px; position: relative; }
-    .leyenda-viz i::after { content: ""; position: absolute; left: 5px; top: -4px; width: 8px; height: 8px; border-radius: 50%; background: inherit; }
-    .vacio { color: var(--suave); font-size: .9rem; padding: 18px 0; }
     .aviso-sim { background: #fde7d9; border: 1px solid #f5c3a3; color: #9a3412; border-radius: 10px; padding: 10px 14px; font-weight: 600; }
-    details.tabla-datos summary { cursor: pointer; font-size: .82rem; color: var(--suave); margin: 4px 0; }
+    .estado-carga { font-size: .88rem; color: var(--suave); margin: 8px 0 0; min-height: 1.2em; }
+
+    /* navegación por secciones */
+    .nav-secciones { position: sticky; top: 0; z-index: 20; background: rgba(244,247,246,.96);
+      border-bottom: 1px solid var(--borde); padding: 8px 0; margin: 0 0 14px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .nav-secciones a { text-decoration: none; font-size: .84rem; font-weight: 600; color: var(--texto); background: #fff; border: 1px solid var(--borde);
+      border-radius: 999px; padding: 5px 12px; }
+    .nav-secciones a:hover { border-color: var(--acento); color: var(--acento); }
+    .criterios { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; font-size: .9rem; }
+    .criterios label { display: inline-flex; flex-direction: row; align-items: center; gap: 7px; font-weight: 500; margin: 0; }
+    .criterios input[type=number] { width: 64px; padding: 4px 6px; }
+    .criterios select { padding: 4px 8px; }
+
+    /* secciones */
+    .seccion { scroll-margin-top: 64px; }
+    .seccion > header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; margin-bottom: 4px; }
+    .seccion > header h2 { margin: 0; font-size: 1.35rem; }
+    .pregunta { color: var(--suave); margin: 2px 0 12px; font-size: .95rem; max-width: 920px; }
+    .veredicto { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 700; border-radius: 999px; padding: 4px 11px; white-space: nowrap; }
+    .veredicto.bien { color: var(--bien); background: var(--bien-fondo); }
+    .veredicto.medio { color: var(--medio); background: var(--medio-fondo); }
+    .veredicto.mal { color: var(--mal); background: var(--mal-fondo); }
+    .veredicto.neutro { color: var(--neutro); background: var(--neutro-fondo); }
+
+    .baldosas { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 4px 0 14px; }
+    .baldosa { background: #fafcfb; border: 1px solid var(--borde); border-radius: 12px; padding: 12px 14px; }
+    .baldosa .v { font-size: 1.65rem; font-weight: 650; line-height: 1.15; }
+    .baldosa .t { font-size: .8rem; color: var(--suave); margin-top: 2px; }
+
+    .rejilla-graficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 16px; margin: 10px 0; }
+    .grafico { background: var(--surface-1); border: 1px solid var(--borde); border-radius: 12px; padding: 14px 16px 8px; min-width: 0; }
+    .g-cab { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+    .grafico h3 { font-size: 1rem; margin: 0; }
+    .grafico .sub { font-size: .8rem; color: var(--text-secondary); margin: 2px 0 6px; }
+    .btn-png { border: 1px solid var(--borde); background: #fff; color: var(--suave); border-radius: 8px; font-size: .75rem; padding: 3px 8px; cursor: pointer; flex: none; }
+    .btn-png:hover { color: var(--acento); border-color: var(--acento); }
+    .grafico svg.plot { width: 100%; height: auto; display: block; overflow: visible; }
+    .grafico svg text { font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; font-variant-numeric: tabular-nums; }
+    .leyenda-viz { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .8rem; color: var(--text-secondary); margin: 2px 0 4px; }
+    .leyenda-viz span { display: inline-flex; align-items: center; gap: 6px; }
+    .leyenda-viz svg { width: 22px; height: 10px; overflow: visible; }
+    details.tabla-datos summary { cursor: pointer; font-size: .8rem; color: var(--suave); margin: 4px 0; }
+    .vacio { color: var(--suave); font-size: .9rem; padding: 14px 0; }
+
+    .claves { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; margin-top: 6px; }
+    .caja-datos, .caja-discusion { border-radius: 12px; padding: 12px 16px; font-size: .9rem; }
+    .caja-datos { border: 1px solid var(--borde); background: #fafcfb; }
+    .caja-discusion { border: 1px solid #f3d9a8; background: #fffaf0; }
+    .caja-datos h4, .caja-discusion h4 { margin: 0 0 6px; font-size: .9rem; }
+    .caja-datos ul, .caja-discusion ul { margin: 0; padding-left: 18px; }
+    .caja-datos li, .caja-discusion li { margin: 5px 0; line-height: 1.45; }
+    .estad { font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+
+    .tabla-hip td { vertical-align: middle; text-align: left !important; }
+    .tabla-hip th { text-align: left !important; }
+    .tabla-hip a { color: inherit; font-weight: 650; }
+
+    .barras-h { display: grid; grid-template-columns: minmax(150px, 280px) 1fr 54px; gap: 6px 10px; align-items: center; font-size: .86rem; }
+    .barras-h .pista { background: #eef1f0; border-radius: 6px; height: 16px; overflow: hidden; }
+    .barras-h .lleno { background: var(--acento); height: 100%; border-radius: 0 4px 4px 0; }
+    .barras-h .n { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+    .medida-sel { display: inline-flex; flex-direction: row; gap: 8px; align-items: center; font-size: .9rem; margin: 2px 0 4px; }
+    .medida-sel select { width: auto; padding: 5px 8px; }
     .excluido td { color: #9ca3af; }
-    @media (max-width: 520px) { .rejilla-graficos { grid-template-columns: 1fr; } }
+    #tip { position: fixed; z-index: 50; pointer-events: none; background: #1f2624; color: #fff; font-size: .78rem; line-height: 1.4;
+      padding: 6px 9px; border-radius: 7px; white-space: pre-line; max-width: 320px; box-shadow: 0 2px 8px rgba(0,0,0,.18); display: none; }
+    @media (max-width: 560px) { .rejilla-graficos { grid-template-columns: 1fr; } .barras-h { grid-template-columns: 110px 1fr 40px; } }
+    @media print {
+      .nav-secciones, .criterios, .btn-png, #tarjeta-datos, details.tabla-datos { display: none !important; }
+      .grafico, .caja-datos, .caja-discusion { break-inside: avoid; }
+      body { background: #fff; }
+    }
   </style>
 </head>
 <body>
 <section class="pantalla activa viz-root">
+  <div class="panel-ancho">
   <header class="cabecera-app">
     <div>
       <p class="etiqueta">Neurociencia Cognitiva e IA · UFV</p>
       <h1>Panel de resultados</h1>
-      <p class="nota" style="margin:0">Junta los CSV del laboratorio, de la versión online y de la IA. Todo se procesa en este navegador: no se sube nada.</p>
+      <p class="nota" style="margin:0">Personas (laboratorio y online) frente a IA, organizado por hipótesis. Todo se calcula en este navegador: no se sube nada.</p>
     </div>
     <nav class="enlaces-app"><a class="btn sec" href="index.html">← Laboratorio</a></nav>
   </header>
 
-  <div class="tarjeta ancha">
+  <div class="tarjeta ancha" id="tarjeta-datos">
     <h2 style="margin-top:0">Datos</h2>
     <label class="zona-carga" id="zona-carga">
       <input type="file" id="entrada-archivos" accept=".csv,text/csv" multiple hidden>
-      <b>Arrastra aquí los CSV</b> o pulsa para elegirlos<br>
-      <span class="nota">Laboratorio (sesiones o «todas las sesiones»), online (hoja «ensayos» descargada en CSV), red siamesa (<code>ia9_3d.csv</code>, <code>ia9mix_2d.csv</code>…) y test por chat (<code>resultados_chat.csv</code>).</span>
+      <b>Arrastra aquí los CSV</b> o pulsa para elegirlos: las dos hojas de la versión online (<code>ensayos</code> y <code>sesiones</code>), los CSV del laboratorio, los de la red siamesa (<code>ia9_3d.csv</code>, <code>ia9mix_2d.csv</code>…) y <code>resultados_chat.csv</code>.
     </label>
-    <div class="fila-botones">
-      <button type="button" class="btn sec" id="btn-navegador">Añadir los datos guardados en este navegador</button>
-      <button type="button" class="btn sec" id="btn-simulados">Añadir datos simulados (para ver el panel)</button>
+    <div class="fila-botones" style="margin-top:12px">
+      <button type="button" class="btn principal" id="btn-proyecto">Cargar los datos del proyecto</button>
+      <button type="button" class="btn sec" id="btn-navegador">Datos guardados en este navegador</button>
+      <button type="button" class="btn sec" id="btn-simulados">Añadir datos simulados</button>
       <button type="button" class="btn sec peligro" id="btn-vaciar">Vaciar</button>
     </div>
+    <p class="estado-carga" id="estado-carga">«Cargar los datos del proyecto» funciona abriendo el panel con <code>python servir.py</code> en este ordenador: lee la carpeta <code>muestras/</code> y los resultados de la IA.</p>
     <div class="archivos" id="archivos"></div>
     <p class="aviso-sim" id="aviso-sim" hidden>Hay DATOS SIMULADOS cargados: sirven solo para ver cómo funciona el panel. No son datos reales.</p>
   </div>
 
-  <div class="tarjeta ancha" id="resultados" hidden>
-    <div class="filtros">
-      <label><input type="checkbox" id="f-prueba" checked> Excluir datos de prueba</label>
-      <label>Modalidad
-        <select id="f-modalidad"><option value="">Todas</option><option value="laboratorio">Laboratorio</option><option value="online">Online</option></select>
-      </label>
-      <label><input type="checkbox" id="f-precision" checked> Excluir a quien acierte menos del <input type="number" id="f-umbral" value="60" min="0" max="100" step="5"> % en el test normal</label>
-      <label><input type="checkbox" id="f-tr" checked> TR válidos entre 300 ms y 20 s</label>
-      <label><input type="checkbox" id="f-primero"> Test normal y 2D: solo de quien lo hizo en primer lugar (sin práctica previa, como la IA)</label>
+  <div id="resultados" hidden>
+    <nav class="nav-secciones" id="nav-secciones"></nav>
+    <div class="tarjeta ancha">
+      <div class="criterios" id="criterios">
+        <b style="margin-right:4px">Criterios</b>
+        <label><input type="checkbox" id="f-prueba" checked> Quitar datos de prueba</label>
+        <label>Modalidad <select id="f-modalidad"><option value="">Todas</option><option value="laboratorio">Laboratorio</option><option value="online">Online</option></select></label>
+        <label><input type="checkbox" id="f-completo" checked> Exigir el test normal completo</label>
+        <label><input type="checkbox" id="f-precision" checked> Precisión en el test normal ≥ <input type="number" id="f-umbral" value="60" min="0" max="100" step="5"> %</label>
+        <label><input type="checkbox" id="f-rapidos" checked> Quitar a quien respondía sin mirar (TR mediano &lt; 300 ms)</label>
+        <label><input type="checkbox" id="f-tr" checked> Quitar pares con TR &lt; 300 ms o &gt; 20 s</label>
+        <label><input type="checkbox" id="f-sonido" checked> Distracción: quitar a quien no oyó los pitidos</label>
+        <label><input type="checkbox" id="f-azar"> Comprobación: quitar los tests que no superan el azar</label>
+        <label><input type="checkbox" id="f-primero"> IA: personas solo en el test que hicieron primero</label>
+      </div>
     </div>
-    <div class="baldosas" id="baldosas" style="margin-top:16px"></div>
-
-    <h2>Estudio 1 · test normal (personas)</h2>
-    <div class="rejilla-graficos">
-      <div class="grafico" id="g-precision"></div>
-      <div class="grafico" id="g-tr"></div>
-    </div>
-
-    <h2>Control 2D · figuras planas frente a cubos (mismas personas)</h2>
-    <div class="rejilla-graficos">
-      <div class="grafico" id="g-dim-precision"></div>
-      <div class="grafico" id="g-dim-tr"></div>
-    </div>
-    <div class="tabla-scroll"><table class="tabla" id="t-dimension"></table></div>
-    <p class="nota">Las mismas personas con las figuras de cubos (test normal) y con las planas (control 2D): diferencias apareadas por participante (media ± error estándar) y t de Student para muestras relacionadas, para todos y según cuál de los dos tests hizo antes. Si la pendiente es mayor en 3D, girar figuras de cubos cuesta más por cada grado.</p>
-
-    <h2>Personas frente a IA</h2>
-    <div class="rejilla-graficos">
-      <div class="grafico" id="g-ia3d"></div>
-      <div class="grafico" id="g-ia2d"></div>
-    </div>
-
-    <h2>Estudio 2 · efecto de la distracción (mismas personas)</h2>
-    <div class="tabla-scroll"><table class="tabla" id="t-estudio2"></table></div>
-    <p class="nota">Diferencias apareadas por participante (media ± error estándar), con la t de Student para muestras relacionadas: el test con distracción (pitidos y formas de colores en todos los pares) frente al test normal de la misma persona. Se muestra para todos y, por separado, según cuál de los dos tests hizo antes: como el orden está contrabalanceado, la práctica se reparte por igual. La Δ pendiente indica si la distracción hace más lento el giro (más ms por grado) o solo añade un tiempo fijo.</p>
-
-    <h2>Efecto del orden (práctica)</h2>
-    <div class="tabla-scroll"><table class="tabla" id="t-orden"></table></div>
-    <p class="nota">Cada test, según la posición en que se hizo (media ± EE de los participantes). Las dos últimas columnas comparan hacerlo en primer lugar con hacerlo después de otro test (t de Welch, entre personas distintas). Una mejora al hacerlo después indica efecto de la práctica.</p>
-
-    <h2>Participantes</h2>
-    <details>
-      <summary class="nota" style="cursor:pointer" id="resumen-participantes">Ver la tabla de participantes</summary>
-      <div class="tabla-scroll"><table class="tabla" id="t-participantes"></table></div>
-    </details>
+    <div id="secciones"></div>
+  </div>
   </div>
 </section>
+<div id="tip"></div>
 
 <script src="js/config.js"></script>
 <script src="js/resultados.js"></script>
